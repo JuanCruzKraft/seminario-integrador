@@ -73,6 +73,5 @@ public abstract class ItemMenu {
 
     public abstract boolean esBebida();
 
-    public abstract boolean aptoVegano();
     
 }

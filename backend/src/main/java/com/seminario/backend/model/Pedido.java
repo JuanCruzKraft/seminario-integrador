@@ -26,7 +26,7 @@ public class Pedido {
     private Cliente cliente;
 
     @Column(nullable = false)
-    private float precio;
+    private Double precio;
 
     @Column(nullable = false)
     private EstadoPedido estado;
