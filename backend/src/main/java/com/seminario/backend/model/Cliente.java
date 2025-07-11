@@ -1,5 +1,7 @@
 package com.seminario.backend.model;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,6 +44,9 @@ public class Cliente {
     @Embedded
     @Column(nullable = false)
     private Coordenada coordenadas;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
+    private List<Pedido> pedidos;
 
 
 }
