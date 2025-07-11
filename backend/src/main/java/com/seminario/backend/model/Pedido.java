@@ -1,5 +1,8 @@
 package com.seminario.backend.model;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import com.seminario.backend.enums.EstadoPedido;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,14 +17,27 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pedidoid;
 
+    @ManyToOne
+    @JoinColumn(name = "vendedor_id", nullable = false)
+    private Vendedor vendedor;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Cliente cliente;
+
     @Column(nullable = false)
     private float precio;
+
+    @Column(nullable = false)
+    private EstadoPedido estado;
 
     @Column(nullable = false)
     private boolean calificado;
 
     @Column(nullable = false)
-    private boolean modifcado;
+    private boolean modificado;
+
+    //falta - metodoPago: EstrategiaPago
 
     @Column(nullable = false)
     private double distanciaEnvio;
@@ -34,17 +50,13 @@ public class Pedido {
 
     @Column(nullable = false)
     private LocalDateTime fechaConfirmacion;
+
+    //falta - pago: Pago
+
+    @Column(nullable = false)
+    private List<ItemPedido> listaItemPedido;
     
-    @ManyToOne
-    @JoinColumn(name = "vendedor_id", nullable = false)
-    private Vendedor vendedor;
 
-    @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente cliente;
-
-
-    // falta: estado metodo de pago, pago, listaItemPedido.
-
+    //el constructor deberia crear el pedido y setearlo en estado en carrito
     
 }
