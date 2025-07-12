@@ -22,4 +22,10 @@ public class Categoria {
     @Enumerated(EnumType.STRING)
     private TipoCategoria tipo;
 
+    /*public Categoria(String nombre, TipoCategoria tipo, String imagen) {
+        this.nombre = nombre;
+        this.tipo = tipo;
+           
+    }
+*/
 }

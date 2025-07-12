@@ -55,8 +55,19 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
     private List<ItemPedido> listaItemPedido;
-    
 
-    //el constructor deberia crear el pedido y setearlo en estado en carrito
+    @OneToOne(mappedBy = "calificacion", cascade = CascadeType.ALL )
+    private Calificacion calificacion;
+
+    public Pedido(Vendedor vendedor, Cliente cliente) {
+        this.vendedor = vendedor;
+        this.cliente = cliente;
+        this.estado = EstadoPedido.EN_CARRITO; 
+        this.calificado = false;
+        this.modificado = false;
+        this.fechaModificacion = LocalDateTime.now();
+        this.fechaConfirmacion = null; // Aún no confirmado
+    }
+    
     
 }
