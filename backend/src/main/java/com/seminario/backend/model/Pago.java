@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import com.seminario.backend.enums.EstadoPago;
 import com.seminario.backend.enums.MetodoPago;
+import com.seminario.backend.model.interfaces.MetodoPagoInterface;
 
 import jakarta.persistence.*;
 
@@ -35,7 +36,7 @@ public class Pago {
     private Pedido pedido;
 
     @Column
-    private MetodoPago metodo;
+    private MetodoPagoInterface metodo;
 
     @Column
     private String resumen;
@@ -51,8 +52,21 @@ public class Pago {
         //asumiendo que el pago se crea al momento de confirmado, no se si estaria bien
     }
     //si no, hacer this.fechaPago = null y dps de confirmarel pago un setfechapago now
+    public Pago(Pedido pedido, MetodoPagoInterface metodo) {
+        this(pedido);
+        this.metodo = metodo;
+        this.estado = EstadoPago.PENDIENTE;
+     } // Asignar estado inicial
+    public void procesarPago(double monto) {
+        if (metodo == null) {
+            throw new IllegalStateException("No se ha definido un método de pago.");
+        }
+        metodo.pagar(monto);
+    }
 
-
+     public void setMetodoPago(MetodoPagoInterface metodo) {
+        this.metodo = metodo;
+    }
     // Método para obtener un resumen del pago, no lo vamos a usar pero lo dejo para revisar
     public String getResumen() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

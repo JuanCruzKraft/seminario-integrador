@@ -1,8 +1,6 @@
 package com.seminario.backend.model;
 import java.time.LocalDateTime;
-import java.util.List;
 
-import com.seminario.backend.enums.EstadoPedido;
 
 import jakarta.persistence.*;
 import lombok.*;
