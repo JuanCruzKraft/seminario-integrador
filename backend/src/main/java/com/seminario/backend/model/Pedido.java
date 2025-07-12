@@ -53,7 +53,7 @@ public class Pedido {
 
     //falta - pago: Pago
 
-    @Column(nullable = false)
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
     private List<ItemPedido> listaItemPedido;
     
 
