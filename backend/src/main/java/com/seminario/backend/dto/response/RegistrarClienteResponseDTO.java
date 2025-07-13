@@ -9,7 +9,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ClienteResponseDTO {
+public class RegistrarClienteResponseDTO {
+
     public ResultadoOperacion resultado;
     private Long id;
     private String nombre;
@@ -19,13 +20,13 @@ public class ClienteResponseDTO {
     private String cuil;
     private String identificador;
 
-    public ClienteResponseDTO() {
+    public RegistrarClienteResponseDTO() {
 
         super();
         this.resultado = new ResultadoOperacion();
     }
 
-    public ClienteResponseDTO(Long id, String nombre, String apellido, String email, String direccion, String cuil, String identificador) {
+    public RegistrarClienteResponseDTO(Long id, String nombre, String apellido, String email, String direccion, String cuil, String identificador) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -35,5 +36,7 @@ public class ClienteResponseDTO {
         this.identificador = identificador;
         this.resultado = new ResultadoOperacion();
     }
+
+    
 
 }
