@@ -17,8 +17,8 @@ public interface BebidaRepository extends JpaRepository<Bebida, Long> {
         List<Bebida> findByPrecioLessThanEqual(Double precio);
         List<Bebida> findByGraduacionAlcoholicaGreaterThanEqual(Float graduacion);
         List<Bebida> findByGraduacionAlcoholicaLessThanEqual(Float graduacion); 
-        List<Bebida> findByTamañoGreaterThanEqual(Float tamanio);
-        List<Bebida> findByTamañoLessThanEqual(Float tamanio);
+        List<Bebida> findBytamanioGreaterThanEqual(Float tamanio);
+        List<Bebida> findBytamanioLessThanEqual(Float tamanio);
         List<Bebida> findByPesoGreaterThanEqual(Float peso);
         List<Bebida> findByPesoLessThanEqual(Float peso);
         List<Bebida> findByCategorias_nombreContaining(String nombre);
@@ -29,8 +29,8 @@ public interface BebidaRepository extends JpaRepository<Bebida, Long> {
         List<Bebida> findByPrecioLessThanEqualAndVendedor_Vendedorid(Double precio, Long idVendedor);
         List<Bebida> findByGraduacionAlcoholicaGreaterThanEqualAndVendedor_Vendedorid(Float graduacion, Long idVendedor);
         List<Bebida> findByGraduacionAlcoholicaLessThanEqualAndVendedor_Vendedorid(Float graduacion, Long idVendedor); 
-        List<Bebida> findByTamañoGreaterThanEqualAndVendedor_Vendedorid(Float tamanio, Long idVendedor);
-        List<Bebida> findByTamañoLessThanEqualAndVendedor_Vendedorid(Float tamanio, Long idVendedor);
+        List<Bebida> findBytamanioGreaterThanEqualAndVendedor_Vendedorid(Float tamanio, Long idVendedor);
+        List<Bebida> findBytamanioLessThanEqualAndVendedor_Vendedorid(Float tamanio, Long idVendedor);
         List<Bebida> findByPesoGreaterThanEqualAndVendedor_Vendedorid(Float peso, Long idVendedor);
         List<Bebida> findByPesoLessThanEqualAndVendedor_Vendedorid(Float peso, Long idVendedor);
         List<Bebida> findByCategorias_nombreContainingAndVendedor_Vendedorid(String nombre, Long idVendedor);

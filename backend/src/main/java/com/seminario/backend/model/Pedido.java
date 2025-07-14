@@ -18,11 +18,11 @@ public class Pedido {
     private Long pedidoid;
 
     @ManyToOne
-    @JoinColumn(name = "vendedor_id", nullable = false)
+    @JoinColumn(name = "vendedorid", nullable = false)
     private Vendedor vendedor;
 
     @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumn(name = "clienteid", nullable = false)
     private Cliente cliente;
 
     @Column(nullable = false)
@@ -53,10 +53,10 @@ public class Pedido {
 
     //falta - pago: Pago
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "itempedidoid", cascade = CascadeType.ALL)
     private List<ItemPedido> listaItemPedido;
 
-    @OneToOne(mappedBy = "calificacion", cascade = CascadeType.ALL )
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
     private Calificacion calificacion;
 
     public Pedido(Vendedor vendedor, Cliente cliente) {

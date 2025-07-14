@@ -21,8 +21,8 @@ public interface PlatoRepository extends JpaRepository<Plato, Long> {
     List<Plato> findByCaloriasLessThanEqual(Double calorias);
     List<Plato> findByPesoGreaterThanEqual(Double peso);
     List<Plato> findByPesoLessThanEqual(Double peso);
-    List<Plato> findByAptoCeliaco(Boolean aptoCeliaco);
-    List<Plato> findByAptoVegano(Boolean aptoVegano);
+    //List<Plato> findByAptoCeliaco(Boolean aptoCeliaco);
+    //List<Plato> findByAptoVegano(Boolean aptoVegano);
     List<Plato> findByCategorias_nombreContaining(String nombre);
 
     List<Plato> findByNombreContainingAndVendedor_vendedorid(String nombre, Long idVendedor);
@@ -33,8 +33,8 @@ public interface PlatoRepository extends JpaRepository<Plato, Long> {
     List<Plato> findByCaloriasLessThanEqualAndVendedor_vendedorid(Double calorias, Long idVendedor);
     List<Plato> findByPesoGreaterThanEqualAndVendedor_vendedorid(Double peso, Long idVendedor);
     List<Plato> findByPesoLessThanEqualAndVendedor_vendedorid(Double peso, Long idVendedor);
-    List<Plato> findByAptoCeliacoAndVendedor_vendedorid(Boolean aptoCeliaco, Long idVendedor);
-    List<Plato> findByAptoVeganoAndVendedor_vendedorid(Boolean aptoVegano, Long idVendedor);
+    //List<Plato> findByAptoCeliacoAndVendedor_vendedorid(Boolean aptoCeliaco, Long idVendedor);
+    //List<Plato> findByAptoVeganoAndVendedor_vendedorid(Boolean aptoVegano, Long idVendedor);
     List<Plato> findByCategorias_nombreContainingAndVendedor_vendedorid(String nombre, Long idVendedor);
     Optional<Plato> findByitemidAndVendedor_vendedorid(Long id, Long idVendedor);
 

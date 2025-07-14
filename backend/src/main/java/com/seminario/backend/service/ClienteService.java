@@ -7,6 +7,9 @@ import com.seminario.backend.dto.response.RegistrarClienteResponseDTO;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.repository.ClienteRepository;
 
+
+import jakarta.validation.Valid;
+
 @Service
 public class ClienteService {
     
@@ -16,9 +19,37 @@ public class ClienteService {
         this.clienteRepository = clienteRepository;
     }
 
-    public RegistrarClienteResponseDTO registrarCliente(RegistrarClienteRequestDTO request) {
+    public RegistrarClienteResponseDTO registrarCliente(@Valid RegistrarClienteRequestDTO request) {
         RegistrarClienteResponseDTO response = new RegistrarClienteResponseDTO();
 
+        if(clienteRepository.existsByUsername(request.getUsername())) {
+            response.resultado.status= 1;
+            response.resultado.mensaje = "El nombre de usuario ya está en uso.";
+            return response;
+        }
+        else if (clienteRepository.existsByEmail(request.getEmail())) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "El email ya está en uso.";
+            return response;
+        } else {
+            Cliente cliente = new Cliente(request.getCuit(), 
+                                        request.getNombre(), 
+                                          request.getApellido(), 
+                                          request.getEmail(), 
+                                          request.getDireccion(),
+                                          request.getUsername(), 
+                                          request.getPassword());
+
+            Cliente clienteGuardado = clienteRepository.save(cliente);
+
+            if (clienteGuardado != null ) {
+                response.resultado.status = 0;
+                response.resultado.mensaje = "Cliente registrado exitosamente.";
+            } else {
+                response.resultado.status = 1;
+                response.resultado.mensaje = "Error al guardar el cliente en la base de datos.";
+            }
+        }
 
         return response;
     }   
