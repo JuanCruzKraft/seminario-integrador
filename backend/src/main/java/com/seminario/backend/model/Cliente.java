@@ -1,5 +1,6 @@
 package com.seminario.backend.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -42,11 +43,23 @@ public class Cliente {
     private Boolean activo;
 
     @Embedded
-    @Column(nullable = false)
     private Coordenada coordenadas;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
     private List<Pedido> pedidos;
+
+    public Cliente(Long cuit, String nombre, String apellido, String email, String direccion, String username, String password) {
+        this.cuit = cuit;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+        this.direccion = direccion;
+        this.username = username;
+        this.password = password;
+        this.activo = true; // Por defecto el cliente está activo
+        this.coordenadas = null; // Inicialmente no tiene coordenadas, lo vemos cuando hagamos el metodo obtener coordenadas
+        this.pedidos = new ArrayList<>(); // Inicializamos la lista de pedidos
+    }
 
 
 }

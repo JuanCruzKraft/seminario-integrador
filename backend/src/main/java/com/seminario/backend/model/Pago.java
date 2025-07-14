@@ -4,7 +4,9 @@ import lombok.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 
+
 import com.seminario.backend.enums.EstadoPago;
+import com.seminario.backend.enums.MetodoPago;
 import com.seminario.backend.model.interfaces.MetodoPagoInterface;
 
 import jakarta.persistence.*;
@@ -34,8 +36,11 @@ public class Pago {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    @Column
+    @Transient
     private MetodoPagoInterface metodo;
+
+    @Enumerated(EnumType.STRING)
+    private MetodoPago metodoPago;
 
     @Column
     private String resumen;

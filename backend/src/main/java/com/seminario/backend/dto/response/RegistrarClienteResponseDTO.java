@@ -12,13 +12,6 @@ import lombok.Data;
 public class RegistrarClienteResponseDTO {
 
     public ResultadoOperacion resultado;
-    private Long id;
-    private String nombre;
-    private String apellido;
-    private String email;
-    private String direccion;
-    private String cuil;
-    private String identificador;
 
     public RegistrarClienteResponseDTO() {
 
@@ -26,16 +19,8 @@ public class RegistrarClienteResponseDTO {
         this.resultado = new ResultadoOperacion();
     }
 
-    public RegistrarClienteResponseDTO(Long id, String nombre, String apellido, String email, String direccion, String cuil, String identificador) {
-        this.id = id;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.direccion = direccion;
-        this.cuil = cuil;
-        this.identificador = identificador;
-        this.resultado = new ResultadoOperacion();
-    }
+
+    
 
     
 

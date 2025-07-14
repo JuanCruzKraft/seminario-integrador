@@ -12,10 +12,10 @@ import lombok.*;
 public class Calificacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long calificacionId;
+    private Long calificacionid;
 
     @OneToOne
-    @JoinColumn(name = "pedido_id", nullable = true)
+    @JoinColumn(name = "pedidoid", nullable = false)
     private Pedido pedido;
 
     @Column(nullable = false)
