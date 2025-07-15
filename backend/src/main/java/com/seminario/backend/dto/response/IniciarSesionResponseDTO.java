@@ -4,12 +4,12 @@ import lombok.Data;
 
 @Data
 public class IniciarSesionResponseDTO {
-    //private String token; // 
-    private Long idUsuario;
-    private String nombre;
-    private String email;
-    private String direccion;
-    private String rol; // si corresponde
+    //public String token; // 
+    public Long idUsuario;
+    public String nombre;
+    public String email;
+    public String direccion;
+    public String rol; // si corresponde
 }
 
 /*
