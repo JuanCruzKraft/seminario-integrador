@@ -5,7 +5,7 @@ public class VisualizarVendedoresRequestDTO {
     // de visualización de vendedores. Si en el futuro se necesitan filtros o parámetros,
     // se pueden agregar aquí.
     
-    // Por ahora, no hay atributos necesarios.sdfsdfsfsfsdfsdsf
+    // Por ahora, no hay atributos necesarios.
     
     // Constructor vacío
     
