@@ -45,10 +45,10 @@ public class ClienteService {
             if (clienteGuardado != null ) {
                 response.resultado.status = 0;
                 response.resultado.mensaje = "Cliente registrado exitosamente.";
-            } else {
-                response.resultado.status = 1;
+            } /*else {
+                //response.resultado.status = 1;
                 response.resultado.mensaje = "Error al guardar el cliente en la base de datos.";
-            }
+            }*/
         }
 
         return response;
