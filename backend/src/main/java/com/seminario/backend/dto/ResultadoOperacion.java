@@ -1,7 +1,7 @@
 package com.seminario.backend.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+//import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
