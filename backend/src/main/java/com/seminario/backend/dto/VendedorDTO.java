@@ -3,7 +3,7 @@ package com.seminario.backend.dto;
 
 
 public class VendedorDTO {
-    public Long vendedorid;
+    public Long vendedorId;
     public String nombre;
     public String direccion;
     public Boolean activo;  

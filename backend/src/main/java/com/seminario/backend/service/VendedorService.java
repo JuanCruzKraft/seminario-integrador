@@ -29,7 +29,7 @@ public class VendedorService {
             }
             for (Vendedor vendedor : vendedores) {
                 VendedorDTO vendedorDTO = new VendedorDTO();
-                vendedorDTO.vendedorid = vendedor.getVendedorid();
+                vendedorDTO.vendedorId = vendedor.getVendedorid();
                 vendedorDTO.nombre = vendedor.getNombre();
                 vendedorDTO.direccion = vendedor.getDireccion();
                 vendedorDTO.activo = vendedor.getActivo();
