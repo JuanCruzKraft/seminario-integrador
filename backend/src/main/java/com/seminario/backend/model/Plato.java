@@ -1,25 +1,23 @@
 package com.seminario.backend.model;
 
-import jakarta.persistence.*;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import lombok.*;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Entity
+@DiscriminatorValue("PLATO")
 public class Plato extends ItemMenu {
 
-    @Column
+    @Column(nullable = false)
     private float calorias;
 
-
-
-    //quizas  no van a ser necesarios segun implementacion actual
-    //hay q definir el constructor de modo tal que setee la categoría comida al momento de creacion
     @Override
     public boolean esComida() {
         return true;
@@ -30,6 +28,15 @@ public class Plato extends ItemMenu {
         return false;
     }
 
-
-
+    // Constructor de conveniencia
+    public Plato(String nombre, String descripcion, double precio, double peso, Integer stock, Boolean activo, Vendedor vendedor, float calorias) {
+        setNombre(nombre);
+        setDescripcion(descripcion);
+        setPrecio(precio);
+        setPeso(peso);
+        setStock(stock);
+        setActivo(activo);
+        setVendedor(vendedor);
+        this.calorias = calorias;
+    }
 }

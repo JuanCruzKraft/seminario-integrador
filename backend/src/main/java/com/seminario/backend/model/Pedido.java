@@ -1,5 +1,6 @@
 package com.seminario.backend.model;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.seminario.backend.enums.EstadoPedido;
@@ -53,21 +54,25 @@ public class Pedido {
 
     //falta - pago: Pago
 
-    @OneToMany(mappedBy = "itempedidoid", cascade = CascadeType.ALL)
-    private List<ItemPedido> listaItemPedido;
+   @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+    private List<ItemPedido> listaItemPedido = new ArrayList<>();
+
 
     @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
     private Calificacion calificacion;
 
     public Pedido(Vendedor vendedor, Cliente cliente) {
-        this.vendedor = vendedor;
-        this.cliente = cliente;
-        this.estado = EstadoPedido.EN_CARRITO; 
-        this.calificado = false;
-        this.modificado = false;
-        this.fechaModificacion = LocalDateTime.now();
-        this.fechaConfirmacion = null; // Aún no confirmado
-    }
+    this.vendedor = vendedor;
+    this.cliente = cliente;
+    this.estado = EstadoPedido.EN_CARRITO;
+    this.calificado = false;
+    this.modificado = false;
+    this.fechaModificacion = LocalDateTime.now();
+    this.fechaConfirmacion = null; // y cambiale nullable = true en la entidad
+    this.distanciaEnvio = 0.0;
+    this.costoEnvio = 0.0;
+}
+
     
     
 }

@@ -42,7 +42,7 @@ public abstract class ItemMenu {
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "vendedorid", nullable = true)
     private Vendedor vendedor;
-
+    
     @ManyToMany
     @JoinTable(
         name = "item_categoria",

@@ -46,6 +46,9 @@ public class VendedorService {
         return response;
     }
 
+    public java.util.Optional<Vendedor> obtenerVendedorPorId(Long id) {
+    return vendedorRepository.findById(id);
+}
 
     
 }
