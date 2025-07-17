@@ -23,10 +23,8 @@ public class ItemPedido {
     @Column(nullable = false)
     @Setter(AccessLevel.NONE)
     private Double subtotal;
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "itemid", nullable = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne
+    @JoinColumn(name = "itemid", nullable = false)
     private ItemMenu itemMenu;
 
 
@@ -37,15 +35,16 @@ public class ItemPedido {
 
     //constructor, setters y getters 
 
-    public ItemPedido(ItemMenu itemMenu, int cantidad){
-        this.itemMenu = itemMenu;
-        this.setCantidad(cantidad);
+   public ItemPedido(ItemMenu itemMenu, Integer cantidad, Pedido pedido) {
+    this.itemMenu = itemMenu;
+    this.pedido = pedido;
+    this.setCantidad(cantidad); // Esto calculará correctamente el subtotal
     }
     public void setPedido(Pedido pedido){
         this.pedido = pedido;
     }
-    public void setCantidad(int cantidad){
-        this.cantidad = cantidad;
-        this.subtotal = cantidad * itemMenu.getPrecio();
+   public void setCantidad(int cantidad){
+    this.cantidad = cantidad;
+    this.subtotal = cantidad * itemMenu.getPrecio();
     }
 }

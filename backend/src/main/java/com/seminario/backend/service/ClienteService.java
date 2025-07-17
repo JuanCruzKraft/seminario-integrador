@@ -48,5 +48,8 @@ public class ClienteService {
 
         return response;
     }   
+    public java.util.Optional<Cliente> obtenerClientePorId(Long id) {
+    return clienteRepository.findById(id);
+}
     
 }
