@@ -6,6 +6,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class SesionMockeada {
     private Long idSesionActual;
+    private String username;
+    private String password;
+
+    public void setUserNameSesionActual(String userName) {
+        this.username = userName;
+    }
+        public void setPasswordSesionActual(String password) {
+        this.password = password;
+    }
+    public String getUsername() {
+        return username;
+    }
+    public String getPassword() {
+        return password;
+    }
     public Long getIdSesionActual() {
         return idSesionActual;
     }

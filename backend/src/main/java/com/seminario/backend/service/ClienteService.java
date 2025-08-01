@@ -1,23 +1,29 @@
 package com.seminario.backend.service;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.seminario.backend.dto.request.IniciarSesionRequestDTO;
 import com.seminario.backend.dto.request.RegistrarClienteRequestDTO;
+import com.seminario.backend.dto.response.IniciarSesionResponseDTO;
 import com.seminario.backend.dto.response.RegistrarClienteResponseDTO;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.repository.ClienteRepository;
-
+import com.seminario.backend.sesion.SesionMockeada;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Null;
 
 @Service
 public class ClienteService {
     
     private final ClienteRepository clienteRepository;
+    //private final SesionMockeada sesion;
     
     public ClienteService(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
     }
+  
 
     public RegistrarClienteResponseDTO registrarCliente(@Valid RegistrarClienteRequestDTO request) {
         RegistrarClienteResponseDTO response = new RegistrarClienteResponseDTO();
@@ -47,6 +53,24 @@ public class ClienteService {
         }
 
         return response;
-    }   
+    }  
+    public IniciarSesionResponseDTO loginClienteDTO(@Valid IniciarSesionRequestDTO request) {
+        final SesionMockeada sesion = new SesionMockeada();
+        IniciarSesionResponseDTO response = new IniciarSesionResponseDTO();
+        if (clienteRepository.findByUsername(request.getUsername()).getPassword().equals(request.getPassword())) {
+            sesion.setIdSesionActual(clienteRepository.findByUsername(request.getUsername()).getClienteid());
+
+            sesion.setUserNameSesionActual(request.getUsername());
+            sesion.setPasswordSesionActual(request.getPassword());
+            response.resultado.status = 0;
+                response.resultado.mensaje = "iniciado correcto.";
+                return response;
+            
+        }
+        response.resultado.status = 1;
+        response.resultado.mensaje = "Contraseña incorrecta.";
+        return response;
+        
+    } 
     
 }

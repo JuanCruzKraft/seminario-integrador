@@ -1,11 +1,18 @@
 package com.seminario.backend.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
     
 @Data
 public class IniciarSesionRequestDTO {
+        @NotBlank
+    @Size(max = 32)
     private String username;
+
+    @NotBlank
+    @Size(max = 32)
     private String password;
 
 
@@ -20,6 +27,6 @@ public class IniciarSesionRequestDTO {
         }
 
         return mensajeError.toString().trim();
-    }
+    } 
     
 }
