@@ -51,6 +51,7 @@ public class ClienteController {
         return ResponseEntity.ok("Sesión cerrada");
     }
 
+    //esto deberia estar en el service
     @GetMapping("/estado")
     public ResponseEntity<String> estado() {
         if (sesion.estaLogueado()) {

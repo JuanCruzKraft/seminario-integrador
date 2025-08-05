@@ -1,6 +1,9 @@
 package com.seminario.backend.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +20,11 @@ public class ItemMenuController {
         this.itemMenuService = itemMenuService;
     }
 
-    @GetMapping("/visualizar")
-    public VisualizarItemMenuResponseDTO visualizarItemMenu() {//VisualizarItemMenuRequestDTO request
-        return itemMenuService.visualizarItemMenu();
+    @GetMapping("/visualizar/{vendedorid}")
+    public VisualizarItemMenuResponseDTO visualizarItemMenu(@PathVariable Long vendedorid) {//VisualizarItemMenuRequestDTO request
+        VisualizarItemMenuRequestDTO request = new VisualizarItemMenuRequestDTO();
+        request.setVendedorid(vendedorid);
+        return itemMenuService.visualizarItemMenu( request);
     }
     
 }

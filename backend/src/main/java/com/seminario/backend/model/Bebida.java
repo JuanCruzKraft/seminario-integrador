@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@DiscriminatorValue("BEBIDA")
 public class Bebida extends ItemMenu {
 
     @Column

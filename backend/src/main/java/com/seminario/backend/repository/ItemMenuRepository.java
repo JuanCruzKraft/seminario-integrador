@@ -10,4 +10,5 @@ import java.util.List;
 public interface ItemMenuRepository extends JpaRepository<ItemMenu, Long> {
     List<ItemMenu> findByVendedor(Vendedor vendedor);
     void deleteByVendedor_vendedorid(Long id);
+    List<ItemMenu> findByVendedor_vendedorid(Long id);
 }

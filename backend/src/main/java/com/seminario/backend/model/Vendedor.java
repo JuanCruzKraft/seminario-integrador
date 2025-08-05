@@ -32,9 +32,9 @@ public class Vendedor{
     private List<Pedido> pedidos;
     
     
-    //@Column
-    //private Double calificacionPromedio;
-//hay q agregar esto y la lista de calificaciones una vez que se implemente la clase Calificacion
+    @Column
+    private Double calificacionPromedio;
+
     @Column
     @Embedded
     private Coordenada coordenadas;
