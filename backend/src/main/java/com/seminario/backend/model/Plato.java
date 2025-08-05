@@ -11,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@DiscriminatorValue("PLATO")
 public class Plato extends ItemMenu {
 
     @Column

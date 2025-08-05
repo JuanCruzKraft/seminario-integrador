@@ -27,5 +27,12 @@ public class VendedorController {
         return vendedorService.visualizarVendedores(); 
     }
     
+
+    // estas funciones no son parte del sistema. es para el desarrollo nomas
+    //hay q borrarlas antes de la presentacion
+    
     
 }
+
+
+

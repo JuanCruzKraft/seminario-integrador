@@ -40,7 +40,7 @@ public abstract class ItemMenu {
     private Boolean activo;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "vendedorid", nullable = true)
+    @JoinColumn(name = "vendedorid")
     private Vendedor vendedor;
 
     @ManyToMany

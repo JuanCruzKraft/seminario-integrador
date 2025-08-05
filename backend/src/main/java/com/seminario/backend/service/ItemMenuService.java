@@ -20,11 +20,11 @@ public class ItemMenuService {
         this.itemMenuRepository = itemMenuRepository;
     }
 
-    public VisualizarItemMenuResponseDTO visualizarItemMenu() {
+    public VisualizarItemMenuResponseDTO visualizarItemMenu(VisualizarItemMenuRequestDTO request) {
        VisualizarItemMenuResponseDTO response = new VisualizarItemMenuResponseDTO();
         
         try {
-            List<ItemMenu> itemMenus = itemMenuRepository.findAll();
+            List<ItemMenu> itemMenus = itemMenuRepository.findByVendedor_vendedorid(request.vendedorid);
             if (itemMenus.isEmpty()) {
                 response.resultado.status = 1;
                 response.resultado.mensaje ="No se encontraron items del menú.";
