@@ -9,7 +9,10 @@ public class ItemMenuDTO {
     public Double peso;
     public Integer stock;
     public Boolean esBebida;
-     public VendedorResumenDTO vendedor; 
+    public Double tamanio; // Solo para bebidas
+    public Double graduacionAlcoholica; // Solo para bebidas
+    public float calorias; // Solo para comidas
+   // public VendedorResumenDTO vendedor; 
     // Constructor vacío
     public ItemMenuDTO() {
         // No se requieren inicializaciones específicas
