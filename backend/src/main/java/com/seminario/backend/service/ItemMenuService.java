@@ -8,7 +8,9 @@ import com.seminario.backend.dto.ItemMenuDTO;
 import com.seminario.backend.dto.VendedorDTO;
 import com.seminario.backend.dto.request.VisualizarItemMenuRequestDTO;
 import com.seminario.backend.dto.response.VisualizarItemMenuResponseDTO;
+import com.seminario.backend.model.Bebida;
 import com.seminario.backend.model.ItemMenu;
+import com.seminario.backend.model.Plato;
 import com.seminario.backend.model.Vendedor;
 import com.seminario.backend.repository.ItemMenuRepository;
 import com.seminario.backend.dto.VendedorResumenDTO; 
@@ -42,22 +44,28 @@ public class ItemMenuService {
                 itemMenuDTO.peso = itemMenu.getPeso();
                 itemMenuDTO.stock = itemMenu.getStock();
                 itemMenuDTO.esBebida = itemMenu.esBebida();
+                if(itemMenu instanceof Bebida bebida){
+                    itemMenuDTO.tamanio = bebida.getTamanio();
+                    itemMenuDTO.graduacionAlcoholica = bebida.getGraduacionAlcoholica();
+                } else if (itemMenu instanceof Plato plato){
+                    itemMenuDTO.calorias = plato.getCalorias();
+                }
 
                 // Asegúrate de mapear esBebida y vendedor si existen en ItemMenu
                 // itemMenuDTO.esBebida = itemMenu.getEsBebida();
-                 itemMenuDTO.esBebida = itemMenu.esBebida(); 
+                // itemMenuDTO.esBebida = itemMenu.esBebida(); 
         
-                if (itemMenu.getVendedor() != null) {
-                    Vendedor vendedorEntidad = itemMenu.getVendedor();
-                    // Crea una instancia del nuevo DTO de resumen
-                    VendedorResumenDTO vendedorResumenDTO = new VendedorResumenDTO();
-                    vendedorResumenDTO.vendedorId = vendedorEntidad.getVendedorid(); 
-                    vendedorResumenDTO.nombre = vendedorEntidad.getNombre();         
+                // if (itemMenu.getVendedor() != null) {
+                //     Vendedor vendedorEntidad = itemMenu.getVendedor();
+                //     // Crea una instancia del nuevo DTO de resumen
+                //     VendedorResumenDTO vendedorResumenDTO = new VendedorResumenDTO();
+                //     vendedorResumenDTO.vendedorId = vendedorEntidad.getVendedorid(); 
+                //     vendedorResumenDTO.nombre = vendedorEntidad.getNombre();         
                     
-                    itemMenuDTO.vendedor = vendedorResumenDTO; // Asigna el DTO de resumen
-                } else {
-                    itemMenuDTO.vendedor = null; 
-                }
+                //     itemMenuDTO.vendedor = vendedorResumenDTO; // Asigna el DTO de resumen
+                // } else {
+                //     itemMenuDTO.vendedor = null; 
+                // }
         
                 response.itemMenus.add(itemMenuDTO);
             
