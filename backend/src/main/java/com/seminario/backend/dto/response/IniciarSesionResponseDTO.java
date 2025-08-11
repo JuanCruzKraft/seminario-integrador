@@ -10,10 +10,13 @@ public class IniciarSesionResponseDTO {
 
     public ResultadoOperacion resultado;
 
+    public Long idCliente;
+
     public IniciarSesionResponseDTO() {
 
         super();
         this.resultado = new ResultadoOperacion();
+
     }
     //public String token; // 
   /*   public Long idUsuario;
