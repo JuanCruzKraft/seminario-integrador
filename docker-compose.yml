@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  seminario-mysql:
+    image: mysql:8.0
+    container_name: seminario-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: seminario-integrador
+    ports:
+      - "3306:3306"
+    volumes:
+      - seminario_data:/var/lib/mysql
+      - ./seminario-integrador.sql:/docker-entrypoint-initdb.d/seminario-integrador.sql
+
+volumes:
+  seminario_data:

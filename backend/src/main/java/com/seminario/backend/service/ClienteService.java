@@ -18,10 +18,12 @@ import jakarta.validation.constraints.Null;
 public class ClienteService {
     
     private final ClienteRepository clienteRepository;
-    //private final SesionMockeada sesion;
+    private final SesionMockeada sesion; // Inyectamos SesionMockeada aquí
     
-    public ClienteService(ClienteRepository clienteRepository) {
+    // El constructor ahora recibe SesionMockeada
+    public ClienteService(ClienteRepository clienteRepository, SesionMockeada sesion) {
         this.clienteRepository = clienteRepository;
+        this.sesion = sesion; // Asignamos la instancia inyectada
     }
   
 
@@ -55,13 +57,17 @@ public class ClienteService {
         return response;
     }  
     public IniciarSesionResponseDTO loginClienteDTO(@Valid IniciarSesionRequestDTO request) {
-        final SesionMockeada sesion = new SesionMockeada();
         IniciarSesionResponseDTO response = new IniciarSesionResponseDTO();
-        if (clienteRepository.findByUsername(request.getUsername()).getPassword().equals(request.getPassword())) {
+        if(clienteRepository.findByUsername(request.getUsername()) == null) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "El usuario no existe.";
+            return response;
+        }else if (clienteRepository.findByUsername(request.getUsername()).getPassword().equals(request.getPassword())) {
+            // Usamos la instancia de 'sesion' que fue inyectada por Spring
             sesion.setIdSesionActual(clienteRepository.findByUsername(request.getUsername()).getClienteid());
-
             sesion.setUserNameSesionActual(request.getUsername());
             sesion.setPasswordSesionActual(request.getPassword());
+            response.idCliente = clienteRepository.findByUsername(request.getUsername()).getClienteid();
             response.resultado.status = 0;
                 response.resultado.mensaje = "iniciado correcto.";
                 return response;
