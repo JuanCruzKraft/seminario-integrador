@@ -28,7 +28,7 @@ public class Vendedor{
     @Column(nullable = false)
     private Boolean activo;
 
-    @OneToMany(mappedBy = "vendedor", cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
+    @OneToMany(mappedBy = "vendedor") //, cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
     private List<Pedido> pedidos;
     
     

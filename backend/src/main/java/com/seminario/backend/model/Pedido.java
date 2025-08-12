@@ -25,38 +25,38 @@ public class Pedido {
     @JoinColumn(name = "clienteid", nullable = false)
     private Cliente cliente;
 
-    @Column(nullable = false)
+    @Column
     private Double precio;
 
     @Column(nullable = false)
     private EstadoPedido estado;
 
-    @Column(nullable = false)
+    @Column
     private boolean calificado;
 
-    @Column(nullable = false)
+    @Column //no deberia ser nullable
     private boolean modificado;
 
     //falta - metodoPago: EstrategiaPago
 
-    @Column(nullable = false)
+    @Column //no deberia ser nullable
     private double distanciaEnvio;
 
-    @Column(nullable = false)
+    @Column //no deberia ser nullable
     private double costoEnvio ;
 
-    @Column(nullable = false)
+    @Column //no deberia ser nullable
     private LocalDateTime fechaModificacion;
 
-    @Column(nullable = false)
+    @Column //no deberia ser nullable
     private LocalDateTime fechaConfirmacion;
 
     //falta - pago: Pago
 
-    @OneToMany(mappedBy = "itempedidoid", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "itempedidoid") //, cascade = CascadeType.ALL)
     private List<ItemPedido> listaItemPedido;
 
-    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "pedido") //, cascade = CascadeType.ALL)
     private Calificacion calificacion;
 
     public Pedido(Vendedor vendedor, Cliente cliente) {

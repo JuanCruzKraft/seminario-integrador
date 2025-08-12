@@ -24,9 +24,8 @@ public class ItemPedido {
     @Setter(AccessLevel.NONE)
     private Double subtotal;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "itemid", nullable = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private ItemMenu itemMenu;
 
 
