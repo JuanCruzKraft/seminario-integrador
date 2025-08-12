@@ -12,4 +12,6 @@ public interface ItemPedidoRepository extends JpaRepository<ItemPedido, Long> {
     
     Set<ItemPedido> findByPedido(Pedido pedido);
     void deleteByItemMenu_Itemid(Long id);
+    Boolean existsByPedidoAndItemMenu_Itemid(Pedido pedido, Long itemMenuId);
+    ItemPedido findByPedidoAndItemMenu_Itemid(Pedido pedido, Long itemMenuId);
 }

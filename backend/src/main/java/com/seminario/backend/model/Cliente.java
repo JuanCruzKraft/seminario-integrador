@@ -45,7 +45,7 @@ public class Cliente {
     @Embedded
     private Coordenada coordenadas;
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
+    @OneToMany(mappedBy = "cliente") //, cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
     private List<Pedido> pedidos;
 
     public Cliente(Long cuit, String nombre, String apellido, String email, String direccion, String username, String password) {

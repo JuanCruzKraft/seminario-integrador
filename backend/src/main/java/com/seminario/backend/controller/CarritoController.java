@@ -5,21 +5,27 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
+import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
+import com.seminario.backend.service.CarritoService;
 import com.seminario.backend.service.PedidoService;
 
 @RestController
 //@Controller
 @RequestMapping("/carrito")
 public class CarritoController {
-
+    private final CarritoService carritoService;
+    public CarritoController(CarritoService carritoService) {
+        this.carritoService = carritoService;
+    }
    // private final PedidoService pedidoService;
     
-    @PostMapping("/crear")
-    public CrearCarritoResponseDTO crearCarrito(@RequestBody CrearCarritoRequestDTO request) {
-        //return pedidoService.crearCarrito(request);
-        return null; // Placeholder for actual implementation
+
+    @PostMapping("/agregar-item")
+    public AgregarItemResponseDTO agregarItem(@RequestBody AgregarItemRequestDTO request) {
+        return carritoService.agregarItem(request);
     }
 
     
