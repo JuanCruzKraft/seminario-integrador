@@ -34,4 +34,6 @@ build/
 
 
 ### Application properties ###
+# Ignorar configuraciones locales de Spring Boot
 src/main/resources/application.properties
+src/main/resources/application.yml
