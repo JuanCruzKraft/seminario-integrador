@@ -5,12 +5,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.seminario.backend.dto.request.IniciarSesionRequestDTO;
 import com.seminario.backend.dto.request.RegistrarClienteRequestDTO;
+import com.seminario.backend.dto.request.cliente.EstablecerDireccionClienteRequestDTO;
 import com.seminario.backend.dto.response.IniciarSesionResponseDTO;
 import com.seminario.backend.dto.response.RegistrarClienteResponseDTO;
+import com.seminario.backend.dto.response.cliente.EstablecerDireccionClienteResponseDTO;
+import com.seminario.backend.service.ApiConsumerService;
 import com.seminario.backend.service.ClienteService;
 import com.seminario.backend.sesion.SesionMockeada;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 //import org.springframework.stereotype.Controller;
@@ -24,13 +26,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ClienteController {
     private final ClienteService clienteService;
     private final SesionMockeada sesion;
-    @Autowired
-    public ClienteController(ClienteService clienteService, SesionMockeada sesion) {
+    private final ApiConsumerService apiConsumer;
+    
+    public ClienteController(ClienteService clienteService, SesionMockeada sesion, ApiConsumerService apiConsumer) {
         this.clienteService = clienteService;
         //this.sesion = new SesionMockeada(); // Esto NO usa el bean de Spring
          this.sesion = sesion;
+         this.apiConsumer = apiConsumer; 
     }
 
+    @PostMapping("/establecer-direccion")
+    public EstablecerDireccionClienteResponseDTO establecerDireccion(@RequestBody EstablecerDireccionClienteRequestDTO request) {
+        return apiConsumer.establecerDireccion(request);
+    }
+    
     @PostMapping("/registrar")
     public RegistrarClienteResponseDTO registrarCliente(@RequestBody RegistrarClienteRequestDTO request) {
         return clienteService.registrarCliente(request);
