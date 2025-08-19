@@ -1,5 +1,6 @@
 package com.seminario.backend.controller;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import com.seminario.backend.service.ItemMenuService;
 
 @RestController
 @RequestMapping("/itemMenu")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ItemMenuController {
     private final ItemMenuService itemMenuService;
 
