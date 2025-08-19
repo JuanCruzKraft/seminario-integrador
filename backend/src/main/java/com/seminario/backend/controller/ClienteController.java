@@ -14,6 +14,7 @@ import com.seminario.backend.service.ClienteService;
 import com.seminario.backend.sesion.SesionMockeada;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 //import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 //@Controller
 @RequestMapping("/cliente")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ClienteController {
     private final ClienteService clienteService;
     private final SesionMockeada sesion;

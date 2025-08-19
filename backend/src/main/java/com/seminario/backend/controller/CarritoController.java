@@ -1,5 +1,6 @@
 package com.seminario.backend.controller;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import com.seminario.backend.service.PedidoService;
 @RestController
 //@Controller
 @RequestMapping("/carrito")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CarritoController {
     private final CarritoService carritoService;
     public CarritoController(CarritoService carritoService) {
