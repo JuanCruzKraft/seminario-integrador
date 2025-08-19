@@ -8,6 +8,7 @@ import com.seminario.backend.dto.request.RegistrarClienteRequestDTO;
 import com.seminario.backend.dto.response.IniciarSesionResponseDTO;
 import com.seminario.backend.dto.response.RegistrarClienteResponseDTO;
 import com.seminario.backend.model.Cliente;
+import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.repository.ClienteRepository;
 import com.seminario.backend.sesion.SesionMockeada;
 
@@ -24,6 +25,25 @@ public class ClienteService {
     public ClienteService(ClienteRepository clienteRepository, SesionMockeada sesion) {
         this.clienteRepository = clienteRepository;
         this.sesion = sesion; // Asignamos la instancia inyectada
+    }
+
+    public Long obtenerSesion() {
+        return sesion.getIdSesionActual();
+    }
+
+    public Cliente obtenerClienteActual() {
+        Long idSesion = obtenerSesion();
+        if (idSesion != null) {
+            return clienteRepository.findById(idSesion).orElse(null);
+        }
+        return null;
+    }   
+
+    public void setCoordenadasClienteActual(Double latitud, Double longitud) {
+        Cliente cliente = obtenerClienteActual();
+            cliente.setCoordenadas(new Coordenada(latitud, longitud));
+            clienteRepository.save(cliente);
+
     }
   
 
@@ -69,14 +89,24 @@ public class ClienteService {
             sesion.setPasswordSesionActual(request.getPassword());
             response.idCliente = clienteRepository.findByUsername(request.getUsername()).getClienteid();
             response.resultado.status = 0;
-                response.resultado.mensaje = "iniciado correcto.";
-                return response;
+            response.resultado.mensaje = "iniciado correcto.";
+            SesionMockeada sesion = new SesionMockeada();
+            sesion.setIdSesionActual(response.idCliente);
+            return response;
             
         }
         response.resultado.status = 1;
         response.resultado.mensaje = "Contraseña incorrecta.";
         return response;
         
+    }
+
+    public void setDireccionClienteActual(String direccion) {
+        Cliente cliente = obtenerClienteActual();
+            cliente.setDireccion(direccion);
+            clienteRepository.save(cliente);
+
+    }
     } 
     
-}
+
