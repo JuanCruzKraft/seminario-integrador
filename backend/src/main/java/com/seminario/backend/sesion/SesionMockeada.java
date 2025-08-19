@@ -33,6 +33,8 @@ public class SesionMockeada {
     }
 
     public void cerrarSesion() {
-        idSesionActual= null;
+        this.idSesionActual = null;
+        this.username = null;
+        this.password = null;
     }
 }

@@ -10,8 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seminario.backend.dto.request.cliente.EstablecerDireccionClienteRequestDTO;
 import com.seminario.backend.dto.response.cliente.EstablecerDireccionClienteResponseDTO;
 import com.seminario.backend.model.Coordenada;
-
-
+import com.seminario.backend.sesion.SesionMockeada;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -19,10 +18,17 @@ import org.springframework.beans.factory.annotation.Value;
 public class ApiConsumerService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    public ApiConsumerService() {
+    //private final SesionMockeada sesion;
+    private final ClienteService clienteService;
+    public ApiConsumerService(ClienteService clienteService) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
+        this.clienteService = clienteService;
+        
     }
+    //para trabajar sesion mockeada
+
+    //fin tratamiento sesion mockeada
     
 
     @Value("${geoapify.api.key}")
@@ -30,6 +36,12 @@ public class ApiConsumerService {
 
     
     public EstablecerDireccionClienteResponseDTO establecerDireccion(EstablecerDireccionClienteRequestDTO request) {
+        if(clienteService.obtenerClienteActual() == null) {
+            EstablecerDireccionClienteResponseDTO response = new EstablecerDireccionClienteResponseDTO();
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
         EstablecerDireccionClienteResponseDTO response = new EstablecerDireccionClienteResponseDTO();
         Coordenada coordenada = obtenerCoordenadas(request.getDireccion());
         if(coordenada.getLatitud() == 0.0 && coordenada.getLongitud() == 0.0) {
@@ -41,8 +53,12 @@ public class ApiConsumerService {
         response.longitud = coordenada.getLongitud();
         response.resultado.setStatus(200);
         response.resultado.setMensaje("Coordenadas obtenidas correctamente.");
+        
+        clienteService.setCoordenadasClienteActual(coordenada.getLatitud(), coordenada.getLongitud());
+        clienteService.setDireccionClienteActual(request.getDireccion());
 
         return response;
+        
     }
 
 
