@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth' // ✅ Importar el hook
 import { AuthService } from '@/services/authService' // ✅ Usar el servicio
-import { IniciarSesionResponse } from '@/types/iniciarSesionResponse' // ✅ Importar el tipo de respuesta
+import { IniciarSesionResponse } from '@/types/auth' // ✅ Importar el tipo de respuesta
 // interface IniciarSesionResponse {
 //   clienteid: number
 //   username: string
@@ -33,22 +33,20 @@ const handleSubmit = async (e: React.FormEvent) => {
   setError('')
 
   try {
-    const data: IniciarSesionResponse = await AuthService.login(credentials)
+    // ✅ Usar loginAndSaveSession en lugar de login + conversión manual
+    const userSession = await AuthService.loginAndSaveSession(credentials)
     
-    if (data.resultado.status === 0) {
-      // ✅ Usar solo los datos que SÍ existen
-      login({
-        idCliente: data.idCliente,        // ✅ Existe en el backend
-        username: credentials.username,   // ✅ Usar del formulario
-        isLoggedIn: true                  // ✅ Requerido por el hook
-      })
-      
-      router.push('/')
+    // ✅ Usar el hook para actualizar el estado de la aplicación
+    login(userSession)
+    
+    router.push('/')
+  } catch (error: any) {
+    // ✅ Manejar errores del backend o de conexión
+    if (error?.resultado?.mensaje) {
+      setError(error.resultado.mensaje)
     } else {
-      setError(data.resultado.mensaje)
+      setError('Error de conexión')
     }
-  } catch (error) {
-    setError('Error de conexión')
     console.error('Login error:', error)
   } finally {
     setLoading(false)

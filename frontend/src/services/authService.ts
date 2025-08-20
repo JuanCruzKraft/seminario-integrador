@@ -13,6 +13,25 @@ export class AuthService {
     return ApiService.post<IniciarSesionResponse>(API_ENDPOINTS.LOGIN, credentials);
   }
 
+  // ✅ Nuevo método que maneja todo el flujo de login
+  static async loginAndSaveSession(credentials: IniciarSesionRequest): Promise<UserSession> {
+    const response = await this.login(credentials);
+    
+    // Crear el UserSession con los datos del backend
+    const userSession: UserSession = {
+      idCliente: response.idCliente,
+      username: credentials.username, // Username del form
+      nombre: response.nombre, // ✅ Nombre del backend
+      isLoggedIn: true
+    };
+      this.saveUser(userSession);
+    // Guardar en localStorage
+    const savedUser = this.getCurrentUser();
+    console.log('🔍 User saved in localStorage:', savedUser);
+    
+    return userSession;
+  }
+
   static async register(cliente: RegistrarClienteRequest): Promise<RegistrarClienteResponse> {
     return ApiService.post<RegistrarClienteResponse>(API_ENDPOINTS.CLIENTE_REGISTRAR, cliente);
   }
