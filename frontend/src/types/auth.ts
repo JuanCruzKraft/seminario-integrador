@@ -24,7 +24,7 @@ export interface RegistrarClienteRequest {
     apellido: string;
     cuit: number;
     email: string;
-    direccion: string;
+    direccion?: string;
     username: string;
     password: string;
     confirmarPassword: string;

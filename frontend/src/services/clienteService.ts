@@ -7,3 +7,4 @@ export class ClienteService {
     return ApiService.post<RegistrarClienteResponse>(API_ENDPOINTS.CLIENTE_REGISTRAR, cliente);
   }
 }
+

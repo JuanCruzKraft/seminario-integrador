@@ -1,59 +1,55 @@
 'use client'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth' // ✅ Importar el hook
-import { AuthService } from '@/services/authService' // ✅ Usar el servicio
-import { IniciarSesionResponse } from '@/types/auth' // ✅ Importar el tipo de respuesta
-// interface IniciarSesionResponse {
-//   clienteid: number
-//   username: string
-//   nombre: string
-//   apellido: string
-//   tipoUsuario: string
-//   resultado: {
-//     status: number
-//     mensaje: string
-//   }
-// }
+import { useAuth } from '@/hooks/useAuth'
+import { AuthService } from '@/services/authService'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
-const [credentials, setCredentials] = useState({
+  const [credentials, setCredentials] = useState({
     username: '',
     password: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mensaje, setMensaje] = useState('')
   const router = useRouter()
-  const { login } = useAuth() // ✅ Obtener la función login del hook
+  const searchParams = useSearchParams()
+  const { login } = useAuth()
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setLoading(true)
-  setError('')
-
-  try {
-    // ✅ Usar loginAndSaveSession en lugar de login + conversión manual
-    const userSession = await AuthService.loginAndSaveSession(credentials)
-    
-    // ✅ Usar el hook para actualizar el estado de la aplicación
-    login(userSession)
-    
-    router.push('/')
-  } catch (error: any) {
-    // ✅ Manejar errores del backend o de conexión
-    if (error?.resultado?.mensaje) {
-      setError(error.resultado.mensaje)
-    } else {
-      setError('Error de conexión')
+  useEffect(() => {
+    const mensajeParam = searchParams.get('mensaje')
+    if (mensajeParam === 'registro-exitoso') {
+      setMensaje('¡Registro exitoso! Ahora inicia sesión para configurar tu dirección.')
     }
-    console.error('Login error:', error)
-  } finally {
-    setLoading(false)
-  }
-}
+  }, [searchParams])
 
-  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const userSession = await AuthService.loginAndSaveSession(credentials)
+      login(userSession)
+      
+      // ✅ Verificar si debe ir a establecer dirección
+      const siguiente = searchParams.get('siguiente')
+      if (siguiente === 'establecer-direccion') {
+        router.push('/establecer-direccion')
+      } else {
+        router.push('/')
+      }
+    } catch (error: any) {
+      if (error?.resultado?.mensaje) {
+        setError(error.resultado.mensaje)
+      } else {
+        setError('Error de conexión')
+      }
+      console.error('Login error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -68,6 +64,12 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {mensaje && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+              {mensaje}
+            </div>
+          )}
+          
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
