@@ -50,9 +50,9 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                <span className="font-medium">Bienvenido, {user?.username}</span>
+                <span className="font-medium">Bienvenido, {user?.nombre}</span>
                 <span className="ml-2 text-xs text-gray-400">
-                  ID: {user?.idCliente}
+                  ID: {user?.username}
                 </span>
               </div>
               <button
@@ -85,7 +85,7 @@ export default function Home() {
                     Bienvenido
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Cliente ID: {user?.idCliente}
+                    {user?.nombre} 
                   </p>
                 </div>
               </div>

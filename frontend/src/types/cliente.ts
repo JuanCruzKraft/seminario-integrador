@@ -14,3 +14,12 @@ export interface RegistrarClienteRequest {
 export interface RegistrarClienteResponse extends BaseResponse {
   clienteid?: number;
 }
+
+export interface EstablecerDireccionRequest {
+  direccion: string
+}
+
+export interface EstablecerDireccionResponse extends BaseResponse {
+  latitud: number;
+  longitud: number;
+}

@@ -50,18 +50,26 @@ export default function RegistroPage() {
         apellido: formData.apellido,
         cuit: parseInt(formData.cuit),
         email: formData.email,
-        direccion: formData.direccion,
+        direccion: '',
         username: formData.username,
         password: formData.password,
         confirmarPassword: formData.confirmarPassword
       })
       
+// ...existing code...
       if (data.resultado.status === 0) {
-        // ✅ Registro exitoso
-        router.push('/login?mensaje=registro-exitoso')
+        // ✅ Guardar credenciales temporalmente para auto-login
+        localStorage.setItem('temp_credentials', JSON.stringify({
+          username: formData.username,
+          password: formData.password
+        }))
+        
+        // ✅ Redirigir directo a establecer dirección
+        router.push('/establecer-direccion')
       } else {
         setError(data.resultado.mensaje)
       }
+// ...existing code...
     } catch (error) {
       setError('Error de conexión')
       console.error('Registration error:', error)
@@ -167,7 +175,7 @@ export default function RegistroPage() {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">
                 Dirección
               </label>
@@ -181,7 +189,7 @@ export default function RegistroPage() {
                 value={formData.direccion}
                 onChange={handleChange}
               />
-            </div>
+            </div> */}
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">

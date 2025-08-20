@@ -19,4 +19,7 @@ export const API_ENDPOINTS = {
   
   // Vendedor
   VENDEDORES_LISTAR: '/vendedores/listar',
+
+  ESTABLECER_DIRECCION: '/cliente/establecer-direccion',
+
 } as const;
