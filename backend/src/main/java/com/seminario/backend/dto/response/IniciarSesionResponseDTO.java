@@ -12,6 +12,8 @@ public class IniciarSesionResponseDTO {
 
     public Long idCliente;
 
+    public String nombre;
+
     public IniciarSesionResponseDTO() {
 
         super();
