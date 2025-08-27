@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   seminario-mysql:
     image: mysql:8.0
@@ -12,6 +13,25 @@ services:
     volumes:
       - seminario_data:/var/lib/mysql
       - ./seminario-integrador.sql:/docker-entrypoint-initdb.d/seminario-integrador.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  seminario-phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: seminario-phpmyadmin
+    restart: always
+    depends_on:
+      seminario-mysql:
+        condition: service_healthy
+    environment:
+      PMA_HOST: seminario-mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8081:80"
 
 volumes:
   seminario_data:

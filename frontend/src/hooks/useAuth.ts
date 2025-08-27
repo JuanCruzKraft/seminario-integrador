@@ -9,28 +9,25 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = AuthService.getCurrentUser();
-    if (userData?.isLoggedIn) {
-      setUser(userData);
+    // Solo ejecutar en cliente
+    if (typeof window !== 'undefined') {
+      const currentUser = AuthService.getCurrentUser();
+      setUser(currentUser);
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const login = (userData: UserSession) => {
-    AuthService.saveUser(userData);
-    setUser(userData);
-  };
-
   const logout = () => {
-    AuthService.logout();
-    setUser(null);
+    if (typeof window !== 'undefined') {
+      AuthService.logout();
+      setUser(null);
+    }
   };
 
   return {
     user,
     loading,
-    login,
     logout,
-    isAuthenticated: !!user?.isLoggedIn
+    isAuthenticated: !!user?.isLoggedIn,
   };
 }
