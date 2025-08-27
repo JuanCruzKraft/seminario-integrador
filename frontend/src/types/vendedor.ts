@@ -1,7 +1,7 @@
 import type { BaseResponse } from './common';
 
 export interface VendedorDTO {
-  vendedorid: number;
+  vendedorId: number;
   nombre: string;
   email: string;
   telefono?: string;
