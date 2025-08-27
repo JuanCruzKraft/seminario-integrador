@@ -87,8 +87,13 @@ public class ClienteService {
             sesion.setIdSesionActual(clienteRepository.findByUsername(request.getUsername()).getClienteid());
             sesion.setUserNameSesionActual(request.getUsername());
             sesion.setPasswordSesionActual(request.getPassword());
-            response.idCliente = clienteRepository.findByUsername(request.getUsername()).getClienteid();
-            response.nombre = clienteRepository.findByUsername(request.getUsername()).getNombre();
+            Cliente cliente = clienteRepository.findByUsername(request.getUsername());
+            response.idCliente = cliente.getClienteid();
+            response.nombre = cliente.getNombre();
+            response.apellido = cliente.getApellido();
+            response.email = cliente.getEmail();
+            response.direccion = cliente.getDireccion();
+            response.cuit = cliente.getCuit();
             response.resultado.status = 0;
             response.resultado.mensaje = "iniciado correcto.";
             SesionMockeada sesion = new SesionMockeada();

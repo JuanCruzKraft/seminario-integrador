@@ -14,21 +14,24 @@ public class IniciarSesionResponseDTO {
 
     public String nombre;
 
+    public String apellido;
+
+    public String email;
+
+    public String direccion;
+
+    public Long  cuit;
+
+    public String username;
+
     public IniciarSesionResponseDTO() {
 
         super();
         this.resultado = new ResultadoOperacion();
 
     }
-    //public String token; // 
-  /*   public Long idUsuario;
-    public String nombre;
-    public String email;
-    public String direccion;
-    public String rol; // si corresponde
-}
 
-
+/**
  * PRECONDICION: EL USUARIO DEBE HABER INICIADO SESION, LA CUMPLIMOS CON EL TOKEN
  * El frontend inicia sesión enviando email y contraseña.
 

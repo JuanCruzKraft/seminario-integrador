@@ -7,15 +7,25 @@ export interface IniciarSesionRequest {
 
 export interface IniciarSesionResponse extends BaseResponse {
   idCliente: number;
-  nombre: string;
+  username: string;
+  nombre: string;    
+  apellido: string; 
+  email: string;   
+  direccion?: string; 
+  tipoUsuario?: string; 
+  cuit: number;
+  
 }
 
 export interface UserSession {
   idCliente: number;
   username: string;
-  nombre: string;     // ✅ Agregar como opcional
-  apellido?: string;   // ✅ Agregar como opcional
-  tipoUsuario?: string; // ✅ Agregar como opcional
+  nombre: string;    
+  apellido: string; 
+  email: string;   
+  direccion?: string; 
+  tipoUsuario?: string; 
+  cuit: number;
   isLoggedIn: boolean;
 }
 

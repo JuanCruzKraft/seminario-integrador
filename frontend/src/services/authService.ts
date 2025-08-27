@@ -22,6 +22,12 @@ export class AuthService {
       idCliente: response.idCliente,
       username: credentials.username, // Username del form
       nombre: response.nombre, // ✅ Nombre del backend
+      apellido: response.apellido,
+      email: response.email,
+      direccion: response.direccion,
+      cuit: response.cuit,
+
+
       isLoggedIn: true
     };
       this.saveUser(userSession);
