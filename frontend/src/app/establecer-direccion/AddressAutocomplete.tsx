@@ -32,7 +32,7 @@ export default function AddressAutocomplete({ onAddressSelect, value, disabled }
     setLoading(true)
     try {
       const response = await fetch(
-        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${GEOAPIFY_API_KEY}&lang=es&limit=5&countries=ar`
+        `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${GEOAPIFY_API_KEY}&lang=es&limit=5&filter=circle:-60.6973,-31.6107,20000&bias=proximity:-60.6973,-31.6107&countries=ar`
       )
       const data = await response.json()
       setSuggestions(data.features || [])
