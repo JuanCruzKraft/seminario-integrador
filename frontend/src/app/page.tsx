@@ -160,8 +160,35 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Card de Vendedores */}
+          <div 
+            onClick={() => router.push('/vendedores')}
+            className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+          >
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white">🏪</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Vendedores
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Explora restaurantes disponibles
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Card de Menú */}
-          <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow">
+          <div 
+            onClick={() => router.push('/menu')}
+            className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+          >
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -222,8 +249,11 @@ export default function Home() {
                 y realizar pedidos de manera fácil y rápida.
               </p>
               <div className="flex justify-center space-x-4">
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors">
-                  Explorar Menús
+                <button 
+                  onClick={() => router.push('/vendedores')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Explorar Vendedores
                 </button>
                 <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-2 rounded-md font-medium transition-colors">
                   Ver Pedidos
