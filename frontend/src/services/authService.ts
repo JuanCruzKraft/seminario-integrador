@@ -28,7 +28,7 @@ export class AuthService {
       email: response.email,
       direccion: response.direccion,
       cuit: response.cuit,
-
+      coordenadas: response.coordenadas, // ✅ Coordenadas del backend
 
       isLoggedIn: true
     };

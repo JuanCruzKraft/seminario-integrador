@@ -46,6 +46,11 @@ export default function SetupDireccionPage() {
     inicializar()
   }, [isAuthenticated, login, router])
 
+  const handleAddressSelect = (address: string, coords?: { lat: number; lng: number }) => {
+    setDireccion(address)
+    // En este caso, las coordenadas las maneja el backend cuando se guarda la dirección
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -121,9 +126,10 @@ export default function SetupDireccionPage() {
               Dirección completa
             </label>
             <AddressAutocomplete
-              onAddressSelect={setDireccion}
+              onAddressSelect={handleAddressSelect}
               value={direccion}
               disabled={loading}
+              placeholder="Ej: Av. Corrientes 1234, Buenos Aires"
             />
             <p className="mt-1 text-xs text-gray-500">
               Escribe al menos 3 caracteres para ver sugerencias de direcciones
