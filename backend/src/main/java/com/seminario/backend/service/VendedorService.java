@@ -1,5 +1,7 @@
 package com.seminario.backend.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -32,6 +34,10 @@ public class VendedorService {
                 response.resultado.mensaje = "No se encontraron vendedores.";
                 return response;
             }
+
+            // Lista para almacenar los DTOs con sus distancias calculadas
+            List<VendedorDTO> vendedoresDTO = new ArrayList<>();
+
             for (Vendedor vendedor : vendedores) {
                 VendedorDTO vendedorDTO = new VendedorDTO();
                 vendedorDTO.vendedorId = vendedor.getVendedorid();
@@ -47,18 +53,27 @@ public class VendedorService {
                     );
                     vendedorDTO.datosLogisticos = datosLogisticos;
                 } catch (Exception e) {
-                    // En caso de error, crear datos logísticos vacíos
+                    // En caso de error, crear datos logísticos vacíos (distancia muy alta para que quede al final)
                     CalcularDatosLogisticosResponse datosVacios = new CalcularDatosLogisticosResponse();
-                    datosVacios.setDistancia(0.0);
+                    datosVacios.setDistancia(999999.0); // Distancia muy alta para ordenamiento
                     datosVacios.setTiempoEstimado(0);
                     datosVacios.setCostoEnvio(0.0);
                     vendedorDTO.datosLogisticos = datosVacios;
                 }
                 
-                response.vendedores.add(vendedorDTO);
+                vendedoresDTO.add(vendedorDTO);
             }
+
+            // Ordenar vendedores por distancia (del más cerca al más lejos)
+            vendedoresDTO.sort(Comparator.comparing(dto -> 
+                dto.datosLogisticos != null ? dto.datosLogisticos.getDistancia() : Double.MAX_VALUE
+            ));
+
+            // Agregar vendedores ordenados a la respuesta
+            response.vendedores.addAll(vendedoresDTO);
+            
             response.resultado.status = 0;
-            response.resultado.mensaje = "Vendedores obtenidos exitosamente.";
+            response.resultado.mensaje = "Vendedores obtenidos exitosamente (ordenados por distancia).";
         } catch (Exception e) {
             response.resultado.status = 1;
             response.resultado.mensaje = "Error al obtener los vendedores: " + e.getMessage();
