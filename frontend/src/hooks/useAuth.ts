@@ -17,6 +17,13 @@ export function useAuth() {
     }
   }, []);
 
+  const login = (userData: UserSession) => {
+    if (typeof window !== 'undefined') {
+      AuthService.saveUser(userData);
+      setUser(userData);
+    }
+  };
+
   const logout = () => {
     if (typeof window !== 'undefined') {
       AuthService.logout();
@@ -27,6 +34,7 @@ export function useAuth() {
   return {
     user,
     loading,
+    login,
     logout,
     isAuthenticated: !!user?.isLoggedIn,
   };
