@@ -16,7 +16,9 @@ export class AuthService {
   // ✅ Nuevo método que maneja todo el flujo de login
   static async loginAndSaveSession(credentials: IniciarSesionRequest): Promise<UserSession> {
     const response = await this.login(credentials);
-    
+    if(response.resultado.status !==0){
+      throw new Error(response.resultado.mensaje || 'Login failed');
+    }
     // Crear el UserSession con los datos del backend
     const userSession: UserSession = {
       idCliente: response.idCliente,
