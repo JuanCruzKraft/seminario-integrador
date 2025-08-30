@@ -31,11 +31,19 @@ export function useAuth() {
     }
   };
 
+  const updateUser = (userData: UserSession) => {
+    if (typeof window !== 'undefined') {
+      AuthService.saveUser(userData);
+      setUser(userData);
+    }
+  };
+
   return {
     user,
     loading,
     login,
     logout,
+    updateUser,
     isAuthenticated: !!user?.isLoggedIn,
   };
 }

@@ -7,18 +7,28 @@ interface AddressSuggestion {
     formatted: string
     place_id: string
   }
+  geometry: {
+    coordinates: [number, number] // [lng, lat]
+  }
 }
 
 interface AddressAutocompleteProps {
-  onAddressSelect: (address: string) => void
-  value: string
+  onAddressSelect: (address: string, coords?: { lat: number; lng: number }) => void
+  value?: string
   disabled?: boolean
+  placeholder?: string
 }
 
-export default function AddressAutocomplete({ onAddressSelect, value, disabled }: AddressAutocompleteProps) {
+export default function AddressAutocomplete({ 
+  onAddressSelect, 
+  value = '', 
+  disabled, 
+  placeholder = "Busca tu dirección..." 
+}: AddressAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [inputValue, setInputValue] = useState(value)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const GEOAPIFY_API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY
@@ -46,6 +56,7 @@ export default function AddressAutocomplete({ onAddressSelect, value, disabled }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
+    setInputValue(newValue)
     onAddressSelect(newValue)
     
     if (timeoutRef.current) {
@@ -59,7 +70,12 @@ export default function AddressAutocomplete({ onAddressSelect, value, disabled }
   }
 
   const handleSuggestionClick = (suggestion: AddressSuggestion) => {
-    onAddressSelect(suggestion.properties.formatted)
+    const coords = {
+      lat: suggestion.geometry.coordinates[1],
+      lng: suggestion.geometry.coordinates[0]
+    }
+    setInputValue(suggestion.properties.formatted)
+    onAddressSelect(suggestion.properties.formatted, coords)
     setSuggestions([])
     setShowSuggestions(false)
   }
@@ -79,12 +95,12 @@ export default function AddressAutocomplete({ onAddressSelect, value, disabled }
         type="text"
         required
         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-        placeholder="Ej: Av. Corrientes 1234, Buenos Aires"
-        value={value}
+        placeholder={placeholder}
+        value={inputValue}
         onChange={handleInputChange}
         disabled={disabled}
         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-        onFocus={() => value.length >= 3 && setShowSuggestions(true)}
+        onFocus={() => inputValue.length >= 3 && setShowSuggestions(true)}
       />
       
       {showSuggestions && (suggestions.length > 0 || loading) && (

@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.seminario.backend.dto.response.VisualizarVendedoresResponseDTO;
+import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.service.VendedorService;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -24,9 +25,12 @@ public class VendedorController {
     
 
     @GetMapping("/listar")
-    public VisualizarVendedoresResponseDTO visualizarVendedores() {
+    public VisualizarVendedoresResponseDTO visualizarVendedores(
+        @RequestParam("clienteLatitud") Double clienteLatitud,
+        @RequestParam("clienteLongitud") Double clienteLongitud) {
         
-        return vendedorService.visualizarVendedores(); 
+        Coordenada coordenadasCliente = new Coordenada(clienteLatitud, clienteLongitud);
+        return vendedorService.visualizarVendedores(coordenadasCliente); 
     }
     
 

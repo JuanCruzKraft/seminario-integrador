@@ -94,6 +94,8 @@ public class ClienteService {
             response.email = cliente.getEmail();
             response.direccion = cliente.getDireccion();
             response.cuit = cliente.getCuit();
+            response.username = cliente.getUsername();
+            response.coordenadas = cliente.getCoordenadas();
             response.resultado.status = 0;
             response.resultado.mensaje = "iniciado correcto.";
             SesionMockeada sesion = new SesionMockeada();

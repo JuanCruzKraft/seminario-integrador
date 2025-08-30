@@ -20,14 +20,16 @@ export default function VendedoresPage() {
   }, [loading, isAuthenticated, router])
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.coordenadas) {
       setLoadingVendedores(true)
-      getVendedores()
+      getVendedores(user.coordenadas.latitud, user.coordenadas.longitud)
         .then(setVendedores)
         .catch(() => setError('No se pudieron cargar los vendedores.'))
         .finally(() => setLoadingVendedores(false))
+    } else if (isAuthenticated && !user?.coordenadas) {
+      setError('No se encontraron las coordenadas de tu dirección. Por favor, establece tu dirección en tu perfil.')
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, user])
 
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
@@ -120,18 +122,26 @@ export default function VendedoresPage() {
           /* Empty State */
           <div className="bg-white shadow rounded-lg p-12">
             <div className="text-center">
-              <div className="text-6xl mb-4">🍽️</div>
+              <div className="text-6xl mb-4">
+                {!user?.coordenadas ? '📍' : '🍽️'}
+              </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No hay vendedores disponibles
+                {!user?.coordenadas 
+                  ? 'Configura tu dirección' 
+                  : 'No hay vendedores disponibles'
+                }
               </h3>
               <p className="text-gray-500 mb-6">
-                Por el momento no hay restaurantes disponibles en tu zona.
+                {!user?.coordenadas 
+                  ? 'Para ver los vendedores disponibles y calcular costos de envío, necesitas configurar tu dirección.' 
+                  : 'Por el momento no hay restaurantes disponibles en tu zona.'
+                }
               </p>
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(!user?.coordenadas ? '/establecer-direccion' : '/')}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
               >
-                Volver al Dashboard
+                {!user?.coordenadas ? 'Configurar Dirección' : 'Volver al Dashboard'}
               </button>
             </div>
           </div>
@@ -155,12 +165,57 @@ export default function VendedoresPage() {
                         <h3 className="text-lg font-semibold text-gray-900">
                           {vendedor.nombre}
                         </h3>
-                        <p className="text-sm text-gray-500">
-                          ID: {vendedor.vendedorId}
-                        </p>
+                        {vendedor.direccion && (
+                          <p className="text-sm text-gray-500">
+                            {vendedor.direccion}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Datos Logísticos */}
+                  {vendedor.datosLogisticos && (
+                    <div className="mb-4 space-y-2">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-green-50 p-2 rounded">
+                          <div className="flex items-center">
+                            <span className="text-green-600 mr-1">📍</span>
+                            <div>
+                              <p className="font-medium text-green-800">Distancia</p>
+                              <p className="text-green-600">
+                                {vendedor.datosLogisticos.distancia.toFixed(1)} km
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-blue-50 p-2 rounded">
+                          <div className="flex items-center">
+                            <span className="text-blue-600 mr-1">⏱️</span>
+                            <div>
+                              <p className="font-medium text-blue-800">Tiempo</p>
+                              <p className="text-blue-600">
+                                {vendedor.datosLogisticos.tiempoEstimado} min
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-orange-50 p-2 rounded col-span-2">
+                          <div className="flex items-center">
+                            <span className="text-orange-600 mr-1">💰</span>
+                            <div>
+                              <p className="font-medium text-orange-800">Costo de Envío</p>
+                              <p className="text-orange-600 font-bold">
+                                ${vendedor.datosLogisticos.costoEnvio.toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="mt-4">
                     <button

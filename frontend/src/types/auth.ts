@@ -1,5 +1,10 @@
 import type { BaseResponse } from './common';
 
+export interface Coordenada {
+  latitud: number;
+  longitud: number;
+}
+
 export interface IniciarSesionRequest {
   username: string;
   password: string;
@@ -14,7 +19,7 @@ export interface IniciarSesionResponse extends BaseResponse {
   direccion?: string; 
   tipoUsuario?: string; 
   cuit: number;
-  
+  coordenadas?: Coordenada;
 }
 
 export interface UserSession {
@@ -26,6 +31,7 @@ export interface UserSession {
   direccion?: string; 
   tipoUsuario?: string; 
   cuit: number;
+  coordenadas?: Coordenada;
   isLoggedIn: boolean;
 }
 

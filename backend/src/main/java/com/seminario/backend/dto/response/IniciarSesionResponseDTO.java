@@ -1,6 +1,7 @@
 package com.seminario.backend.dto.response;
 
 import com.seminario.backend.dto.ResultadoOperacion;
+import com.seminario.backend.model.Coordenada;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,8 @@ public class IniciarSesionResponseDTO {
     public Long  cuit;
 
     public String username;
+
+    public Coordenada coordenadas;
 
     public IniciarSesionResponseDTO() {
 
