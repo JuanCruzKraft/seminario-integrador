@@ -43,7 +43,7 @@ export default function LoginPage() {
       if (error?.resultado?.mensaje) {
         setError(error.resultado.mensaje)
       } else {
-        setError('Error de conexión')
+        setError(error.message || 'Error desconocido')
       }
       console.error('Login error:', error)
     } finally {
