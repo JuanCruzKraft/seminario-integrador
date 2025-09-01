@@ -23,28 +23,22 @@ export default function PerfilPage() {
   }
 
   const handleEliminarCliente = async () => {
-    setDeleteLoading(true)
-    try {
-      // Aquí harías la llamada a la API para eliminar el cliente
-      // await ApiService.delete(API_ENDPOINTS.ELIMINAR_CLIENTE)
+    setDeleteLoading(true);
+      const res = await fetch('http://localhost:8080/cliente/eliminar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+        logout();
+        router.push('/login?mensaje=cuenta-eliminada');
       
-      console.log('Eliminando cliente...')
       
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Logout y redirección
-      logout()
-      router.push('/login?mensaje=cuenta-eliminada')
-      
-    } catch (error) {
-      console.error('Error eliminando cliente:', error)
-      alert('Error al eliminar la cuenta')
-    } finally {
-      setDeleteLoading(false)
-      setShowDeleteModal(false)
-    }
-  }
+   
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+    
+  };
 
   // Loading state
   if (loading) {
