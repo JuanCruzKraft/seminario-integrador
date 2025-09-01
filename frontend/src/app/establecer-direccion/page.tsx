@@ -14,6 +14,7 @@ export default function SetupDireccionPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [inicializando, setInicializando] = useState(true)
+  const [coordenadasSeleccionadas, setCoorenadasSeleccionadas] = useState<{ lat: number; lng: number } | null>(null)
   const router = useRouter()
   const { user, isAuthenticated, login } = useAuth()
 
@@ -48,7 +49,7 @@ export default function SetupDireccionPage() {
 
   const handleAddressSelect = (address: string, coords?: { lat: number; lng: number }) => {
     setDireccion(address)
-    // En este caso, las coordenadas las maneja el backend cuando se guarda la dirección
+    setCoorenadasSeleccionadas(coords || null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +74,23 @@ export default function SetupDireccionPage() {
       )
 
       if (response.resultado.status === 200) {
-        // ✅ Éxito - redirigir al dashboard
+        // ✅ Éxito - actualizar la sesión del usuario con las coordenadas
+        if (user && coordenadasSeleccionadas) {
+          const updatedUser = {
+            ...user,
+            direccion: direccion.trim(),
+            coordenadas: {
+              latitud: coordenadasSeleccionadas.lat,
+              longitud: coordenadasSeleccionadas.lng
+            }
+          }
+          
+          // Actualizar la sesión en localStorage
+          AuthService.saveUser(updatedUser)
+          login(updatedUser)
+        }
+        
+        // ✅ Redirigir al dashboard
         router.push('/?mensaje=registro-completo')
       } else {
         setError(response.resultado.mensaje)

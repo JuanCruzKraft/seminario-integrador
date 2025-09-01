@@ -1,6 +1,7 @@
 package com.seminario.backend.service;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.request.IniciarSesionRequestDTO;
@@ -20,11 +21,13 @@ public class ClienteService {
     
     private final ClienteRepository clienteRepository;
     private final SesionMockeada sesion; // Inyectamos SesionMockeada aquí
+    private final PasswordEncoder passwordEncoder; // Inyectamos PasswordEncoder para BCrypt
     
-    // El constructor ahora recibe SesionMockeada
-    public ClienteService(ClienteRepository clienteRepository, SesionMockeada sesion) {
+    // El constructor ahora recibe SesionMockeada y PasswordEncoder
+    public ClienteService(ClienteRepository clienteRepository, SesionMockeada sesion, PasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
         this.sesion = sesion; // Asignamos la instancia inyectada
+        this.passwordEncoder = passwordEncoder; // Asignamos el encoder
     }
 
     public Long obtenerSesion() {
@@ -60,13 +63,16 @@ public class ClienteService {
             response.resultado.mensaje = "El email ya está en uso.";
             return response;
         } else {
+            // Hashear la contraseña antes de guardarla
+            String hashedPassword = passwordEncoder.encode(request.getPassword());
+            
             Cliente cliente = new Cliente(request.getCuit(), 
                                         request.getNombre(), 
                                           request.getApellido(), 
                                           request.getEmail(), 
                                           request.getDireccion(),
                                           request.getUsername(), 
-                                          request.getPassword());
+                                          hashedPassword); // Usar la contraseña hasheada
 
             clienteRepository.save(cliente);
             
@@ -78,16 +84,18 @@ public class ClienteService {
     }  
     public IniciarSesionResponseDTO loginClienteDTO(@Valid IniciarSesionRequestDTO request) {
         IniciarSesionResponseDTO response = new IniciarSesionResponseDTO();
-        if(clienteRepository.findByUsername(request.getUsername()) == null) {
+        Cliente cliente = clienteRepository.findByUsername(request.getUsername());
+        
+        if(cliente == null) {
             response.resultado.status = 1;
             response.resultado.mensaje = "El usuario no existe.";
             return response;
-        }else if (clienteRepository.findByUsername(request.getUsername()).getPassword().equals(request.getPassword())) {
+        } else if (passwordEncoder.matches(request.getPassword(), cliente.getPassword())) {
             // Usamos la instancia de 'sesion' que fue inyectada por Spring
-            sesion.setIdSesionActual(clienteRepository.findByUsername(request.getUsername()).getClienteid());
+            sesion.setIdSesionActual(cliente.getClienteid());
             sesion.setUserNameSesionActual(request.getUsername());
             sesion.setPasswordSesionActual(request.getPassword());
-            Cliente cliente = clienteRepository.findByUsername(request.getUsername());
+            
             response.idCliente = cliente.getClienteid();
             response.nombre = cliente.getNombre();
             response.apellido = cliente.getApellido();
@@ -98,15 +106,13 @@ public class ClienteService {
             response.coordenadas = cliente.getCoordenadas();
             response.resultado.status = 0;
             response.resultado.mensaje = "iniciado correcto.";
-            SesionMockeada sesion = new SesionMockeada();
-            sesion.setIdSesionActual(response.idCliente);
-            return response;
             
+            return response;
         }
+        
         response.resultado.status = 1;
         response.resultado.mensaje = "Contraseña incorrecta.";
         return response;
-        
     }
 
     public void setDireccionClienteActual(String direccion) {
