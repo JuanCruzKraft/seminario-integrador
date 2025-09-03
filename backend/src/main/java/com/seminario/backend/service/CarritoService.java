@@ -110,19 +110,27 @@ public class CarritoService {
         if (itemPedido == null) return false; 
         ItemMenu itemMenu = itemMenuRepository.findById(itemMenuId).get();
         Integer nuevaCantidad = itemPedido.getCantidad() + cantidad;
-        if(nuevaCantidad <= 0 ){
-            itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
-            itemPedidoRepository.delete(itemPedido); // Eliminar el item si la cantidad es 0 o menor
-            itemMenuRepository.save(itemMenu);
-            return true;
-        }else{
-            itemMenu.setStock(itemMenu.getStock() - nuevaCantidad);
-            itemMenuRepository.save(itemMenu);
-            itemPedido.setCantidad(nuevaCantidad);
-            itemPedidoRepository.save(itemPedido);
-            return true;
+        if(tieneStock(itemMenuId, cantidad)){
+        
+            if(nuevaCantidad <= 0 ){
+                if((itemMenu.getStock() + cantidad)<0) return false;
+                if(itemPedido.getCantidad() + cantidad <0) return false;
+                itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
+                itemPedidoRepository.delete(itemPedido); // Eliminar el item si la cantidad es 0 o menor
+                itemMenuRepository.save(itemMenu);
+                return true;
+            }else{
+                itemMenu.setStock(itemMenu.getStock() - nuevaCantidad);
+                itemMenuRepository.save(itemMenu);
+                itemPedido.setCantidad(nuevaCantidad);
+                itemPedidoRepository.save(itemPedido);
+                return true;
+            
+            }
         }
-   }
+        return false;
+        //no hay stock suficiente o el stock es negativo
+    }
 
 
    
