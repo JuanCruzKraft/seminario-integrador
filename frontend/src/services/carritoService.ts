@@ -17,8 +17,8 @@ export const addItemToCarrito = async (
     body: JSON.stringify({
       clienteid: clienteId,
       vendedorid: vendedorId,
-      itemMenuId,
-      cantidad
+      itemMenuId: itemMenuId,
+      cantidad: cantidad
     })
   });
   

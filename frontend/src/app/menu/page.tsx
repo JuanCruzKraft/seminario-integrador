@@ -41,7 +41,11 @@ export default function MenuPage() {
       setItemMenus([])
       
       getItemMenusByVendedor(parseInt(vendedorId))
-        .then(setItemMenus)
+        .then(data => {
+          console.log('Items recibidos del backend:', data)
+          console.log('Primer item:', data[0])
+          setItemMenus(data)
+        })
         .catch((err) => {
           if (axios.isAxiosError(err)) {
             setError(
@@ -64,10 +68,18 @@ export default function MenuPage() {
   }, [vendedorId, router])
 
   const handleSelectItem = (itemId: number) => {
-    setSelectedItems(prev => ({ 
-      ...prev, 
-      [itemId]: !prev[itemId] 
-    }))
+    console.log('Intentando seleccionar item con ID:', itemId, 'tipo:', typeof itemId)
+    
+    setSelectedItems(prev => {
+      console.log('Estado previo:', prev)
+      const newState = { 
+        ...prev, 
+        [itemId]: !prev[itemId] 
+      }
+      console.log('Nuevo estado:', newState)
+      return newState
+    })
+    
     // Inicializar cantidad si no existe
     if (!qtyById[itemId]) {
       setQtyById(prev => ({ ...prev, [itemId]: 1 }))
@@ -75,24 +87,24 @@ export default function MenuPage() {
   }
 
   const handleAgregarAlCarrito = async (item: ItemMenuDTO) => {
-    if (!user || !selectedItems[item.id]) {
-      setErrorById(prev => ({ ...prev, [item.id]: "Primero selecciona este item" }))
+    if (!user || !selectedItems[item.itemMenuId]) {
+      setErrorById(prev => ({ ...prev, [item.itemMenuId]: "Primero selecciona este item" }))
       setTimeout(() => {
-        setErrorById(prev => ({ ...prev, [item.id]: null }))
+        setErrorById(prev => ({ ...prev, [item.itemMenuId]: null }))
       }, 3000)
       return
     }
     
     // Limpiar errores previos para este ítem
-    setErrorById(prev => ({ ...prev, [item.id]: null }))
+    setErrorById(prev => ({ ...prev, [item.itemMenuId]: null }))
     // Marcar este ítem específico como "cargando"
-    setLoadingById(prev => ({ ...prev, [item.id]: true }))
+    setLoadingById(prev => ({ ...prev, [item.itemMenuId]: true }))
     
     try {
-      const cantidad = qtyById[item.id] ?? 1
+      const cantidad = qtyById[item.itemMenuId] ?? 1
       // Llamar al backend para agregar el ítem
       const response = await addItemToCarrito(
-        item.id, 
+        item.itemMenuId, 
         cantidad, 
         user.idCliente, 
         parseInt(vendedorId!)
@@ -101,15 +113,15 @@ export default function MenuPage() {
       // Mostrar mensaje de éxito solo para este ítem
       setSuccessById(prev => ({ 
         ...prev, 
-        [item.id]: "¡Producto agregado al carrito!" 
+        [item.itemMenuId]: "¡Producto agregado al carrito!" 
       }))
       
       // Deseleccionar el item después de agregarlo
-      setSelectedItems(prev => ({ ...prev, [item.id]: false }))
+      setSelectedItems(prev => ({ ...prev, [item.itemMenuId]: false }))
       
       // Limpiar el mensaje de éxito después de 3 segundos
       setTimeout(() => {
-        setSuccessById(prev => ({ ...prev, [item.id]: null }))
+        setSuccessById(prev => ({ ...prev, [item.itemMenuId]: null }))
       }, 3000)
       
     } catch (err) {
@@ -120,15 +132,15 @@ export default function MenuPage() {
         errorMsg = err.message
       }
       
-      setErrorById(prev => ({ ...prev, [item.id]: errorMsg }))
+      setErrorById(prev => ({ ...prev, [item.itemMenuId]: errorMsg }))
       
       // Limpiar el mensaje de error después de 5 segundos
       setTimeout(() => {
-        setErrorById(prev => ({ ...prev, [item.id]: null }))
+        setErrorById(prev => ({ ...prev, [item.itemMenuId]: null }))
       }, 5000)
     } finally {
       // Desmarcar este ítem específico como "cargando"
-      setLoadingById(prev => ({ ...prev, [item.id]: false }))
+      setLoadingById(prev => ({ ...prev, [item.itemMenuId]: false }))
     }
   }
 
@@ -246,27 +258,38 @@ export default function MenuPage() {
         ) : (
           /* Menu Items Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {itemMenus.map((item, idx) => (
-              <div
-                key={item.id ?? idx}
-                className={`bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-all cursor-pointer ${
-                  selectedItems[item.id] ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''
-                }`}
-                onClick={() => handleSelectItem(item.id)}
-              >
+            {itemMenus.map((item, idx) => {
+              // Verificación más estricta del ID
+              const itemId = item.itemMenuId
+              
+              if (!itemId || typeof itemId !== 'number') {
+                console.error('Item con ID inválido encontrado:', { item, idx })
+                return null
+              }
+              
+              return (
+                <div
+                  key={itemId} // Usar el ID validado
+                  className={`bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-all cursor-pointer ${
+                    selectedItems[itemId] ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''
+                  }`}
+                  onClick={() => handleSelectItem(itemId)}
+                >
                 <div className="p-6">
                   {/* Indicador de selección */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={selectedItems[item.id] || false}
-                        onChange={() => handleSelectItem(item.id)}
+                        checked={selectedItems[itemId] || false}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          handleSelectItem(itemId)
+                        }}
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        onClick={(e) => e.stopPropagation()}
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700">
-                        {selectedItems[item.id] ? 'Seleccionado' : 'Seleccionar'}
+                        {selectedItems[itemId] ? 'Seleccionado' : 'Seleccionar'}
                       </span>
                     </div>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -279,28 +302,29 @@ export default function MenuPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-medium text-gray-900">{item.nombre}</h3>
-                      <p className="mt-1 text-sm text-gray-600">{item.descripcion}</p>
+                      <p className="mt-1 text-sm text-gray-600">{item.descripcion || 'Sin descripción'}</p>
                     </div>
                     <div className="ml-4 text-right">
                       <p className="text-lg font-semibold text-gray-900">${item.precio}</p>
+                      <p className="text-xs text-gray-500">{item.esBebida ? 'Bebida' : 'Plato'}</p>
                     </div>
                   </div>
 
                   {/* Mensajes de éxito o error para este ítem específico */}
-                  {successById[item.id] && (
+                  {successById[itemId] && (
                     <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded text-sm">
-                      {successById[item.id]}
+                      {successById[itemId]}
                     </div>
                   )}
                   
-                  {errorById[item.id] && (
+                  {errorById[itemId] && (
                     <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
-                      {errorById[item.id]}
+                      {errorById[itemId]}
                     </div>
                   )}
 
                   {/* Selector de cantidad solo si está seleccionado */}
-                  {selectedItems[item.id] && (
+                  {selectedItems[itemId] && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between">
                         <label className="block text-sm font-medium text-gray-700">Cantidad:</label>
@@ -309,10 +333,10 @@ export default function MenuPage() {
                             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-l-md"
                             onClick={(e) => {
                               e.stopPropagation()
-                              const newCantidad = Math.max(1, (qtyById[item.id] || 1) - 1)
-                              handleCantidadChange(item.id, newCantidad)
+                              const newCantidad = Math.max(1, (qtyById[itemId] || 1) - 1)
+                              handleCantidadChange(itemId, newCantidad)
                             }}
-                            disabled={loadingById[item.id]}
+                            disabled={loadingById[itemId]}
                           >
                             -
                           </button>
@@ -320,22 +344,25 @@ export default function MenuPage() {
                             type="number"
                             min="1"
                             max={item.stock}
-                            value={qtyById[item.id] || 1}
+                            value={qtyById[itemId] || 1}
                             onChange={(e) => {
                               e.stopPropagation()
-                              handleCantidadChange(item.id, parseInt(e.target.value) || 1)
+                              const value = parseInt(e.target.value)
+                              if (!isNaN(value)) {
+                                handleCantidadChange(itemId, value)
+                              }
                             }}
                             className="w-12 text-center border-none focus:outline-none focus:ring-0"
-                            disabled={loadingById[item.id]}
+                            disabled={loadingById[itemId]}
                           />
                           <button
                             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-r-md"
                             onClick={(e) => {
                               e.stopPropagation()
-                              const newCantidad = Math.min(item.stock, (qtyById[item.id] || 1) + 1)
-                              handleCantidadChange(item.id, newCantidad)
+                              const newCantidad = Math.min(item.stock, (qtyById[itemId] || 1) + 1)
+                              handleCantidadChange(itemId, newCantidad)
                             }}
-                            disabled={loadingById[item.id] || (qtyById[item.id] || 1) >= item.stock}
+                            disabled={loadingById[itemId] || (qtyById[itemId] || 1) >= item.stock}
                           >
                             +
                           </button>
@@ -348,22 +375,22 @@ export default function MenuPage() {
                   <div className="mt-4">
                     <button
                       className={`w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                        item.stock > 0 && selectedItems[item.id] && !loadingById[item.id]
+                        item.stock > 0 && selectedItems[itemId] && !loadingById[itemId]
                           ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      disabled={item.stock === 0 || !selectedItems[item.id] || loadingById[item.id]}
+                      disabled={item.stock === 0 || !selectedItems[itemId] || loadingById[itemId]}
                       onClick={(e) => {
                         e.stopPropagation()
                         handleAgregarAlCarrito(item)
                       }}
                     >
-                      {loadingById[item.id] ? (
+                      {loadingById[itemId] ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           Agregando...
                         </>
-                      ) : !selectedItems[item.id] ? (
+                      ) : !selectedItems[itemId] ? (
                         'Primero selecciona este item'
                       ) : (
                         <>
@@ -377,7 +404,8 @@ export default function MenuPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
