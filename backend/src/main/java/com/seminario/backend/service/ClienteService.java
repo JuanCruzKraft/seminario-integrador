@@ -90,6 +90,11 @@ public class ClienteService {
             response.resultado.status = 1;
             response.resultado.mensaje = "El usuario no existe.";
             return response;
+        } else if (!cliente.getActivo()) {
+            // Verificar si la cuenta está activa
+            response.resultado.status = 1;
+            response.resultado.mensaje = "La cuenta ha sido eliminada.";
+            return response;
         } else if (passwordEncoder.matches(request.getPassword(), cliente.getPassword())) {
             // Usamos la instancia de 'sesion' que fue inyectada por Spring
             sesion.setIdSesionActual(cliente.getClienteid());
@@ -129,21 +134,16 @@ public class ClienteService {
         if (!clienteRepository.existsById(idUsuarioActual)) {
             return ResponseEntity.status(404).body("El usuario no existe");
         }
+        
         Cliente cliente = clienteRepository.findById(idUsuarioActual).orElse(null);
-        Cliente copia = new Cliente();
-        copia.setActivo(false);
-        copia.setClienteid(idUsuarioActual);
-        copia.setCuit(cliente.getCuit());
-        copia.setNombre(cliente.getNombre());
-        copia.setApellido(cliente.getApellido());
-        copia.setEmail(cliente.getEmail());
-        copia.setDireccion(cliente.getDireccion());
-        copia.setUsername(cliente.getUsername());
-        copia.setPassword(cliente.getPassword());
-        copia.setCoordenadas(cliente.getCoordenadas());
-        copia.setPedidos(cliente.getPedidos());
-
-        clienteRepository.save(copia);
-        return ResponseEntity.ok("Cuenta eliminada exitosamente");
-    }}
+        if (cliente != null) {
+            // Marcar como inactivo (soft delete)
+            cliente.setActivo(false);
+            clienteRepository.save(cliente);
+            return ResponseEntity.ok("Cuenta eliminada exitosamente");
+        } else {
+            return ResponseEntity.status(404).body("El usuario no existe");
+        }
+    }
+}
 

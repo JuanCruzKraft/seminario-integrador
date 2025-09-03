@@ -24,20 +24,32 @@ export default function PerfilPage() {
 
   const handleEliminarCliente = async () => {
     setDeleteLoading(true);
+    try {
       const res = await fetch('http://localhost:8080/cliente/eliminar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      if (res.ok) {
+        // Éxito: cuenta eliminada
         logout();
         router.push('/login?mensaje=cuenta-eliminada');
-      
-      
-   
+      } else {
+        // Error del servidor
+        const errorText = await res.text();
+        console.error('Error al eliminar cuenta:', errorText);
+        alert(`Error al eliminar la cuenta: ${errorText}`);
+      }
+    } catch (error) {
+      // Error de red o conexión
+      console.error('Error de conexión:', error);
+      alert('Error de conexión. Verifica que el servidor esté funcionando.');
+    } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
-    
+    }
   };
 
   // Loading state
