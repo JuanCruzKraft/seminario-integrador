@@ -1,19 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useCarrito } from '@/hooks/useCarrito'
 import { getItemMenusByVendedor } from '@/services/itemMenuService'
-import { ItemMenuDTO } from '@/types/itemMenu'
+import { addItemToCarrito } from '@/services/carritoService'
+import type { ItemMenuDTO } from '@/types/itemMenu'
 import axios from 'axios'
 
 export default function MenuPage() {
   const { user, loading, isAuthenticated } = useAuth()
+  const { carrito, setCarrito } = useCarrito()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [itemMenus, setItemMenus] = useState<ItemMenuDTO[]>([])
   const [loadingMenu, setLoadingMenu] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Estados por ítem individual
+  const [selectedItems, setSelectedItems] = useState<Record<number, boolean>>({})
+  const [qtyById, setQtyById] = useState<Record<number, number>>({})
+  const [loadingById, setLoadingById] = useState<Record<number, boolean>>({})
+  const [errorById, setErrorById] = useState<Record<number, string | null>>({})
+  const [successById, setSuccessById] = useState<Record<number, string | null>>({})
 
   const vendedorId = searchParams.get('vendedorId')
   const vendedorNombre = searchParams.get('vendedorNombre')
@@ -52,6 +62,82 @@ export default function MenuPage() {
       router.push('/vendedores')
     }
   }, [vendedorId, router])
+
+  const handleSelectItem = (itemId: number) => {
+    setSelectedItems(prev => ({ 
+      ...prev, 
+      [itemId]: !prev[itemId] 
+    }))
+    // Inicializar cantidad si no existe
+    if (!qtyById[itemId]) {
+      setQtyById(prev => ({ ...prev, [itemId]: 1 }))
+    }
+  }
+
+  const handleAgregarAlCarrito = async (item: ItemMenuDTO) => {
+    if (!user || !selectedItems[item.id]) {
+      setErrorById(prev => ({ ...prev, [item.id]: "Primero selecciona este item" }))
+      setTimeout(() => {
+        setErrorById(prev => ({ ...prev, [item.id]: null }))
+      }, 3000)
+      return
+    }
+    
+    // Limpiar errores previos para este ítem
+    setErrorById(prev => ({ ...prev, [item.id]: null }))
+    // Marcar este ítem específico como "cargando"
+    setLoadingById(prev => ({ ...prev, [item.id]: true }))
+    
+    try {
+      const cantidad = qtyById[item.id] ?? 1
+      // Llamar al backend para agregar el ítem
+      const response = await addItemToCarrito(
+        item.id, 
+        cantidad, 
+        user.idCliente, 
+        parseInt(vendedorId!)
+      )
+      
+      // Mostrar mensaje de éxito solo para este ítem
+      setSuccessById(prev => ({ 
+        ...prev, 
+        [item.id]: "¡Producto agregado al carrito!" 
+      }))
+      
+      // Deseleccionar el item después de agregarlo
+      setSelectedItems(prev => ({ ...prev, [item.id]: false }))
+      
+      // Limpiar el mensaje de éxito después de 3 segundos
+      setTimeout(() => {
+        setSuccessById(prev => ({ ...prev, [item.id]: null }))
+      }, 3000)
+      
+    } catch (err) {
+      // Manejar errores solo para este ítem
+      let errorMsg = "No se pudo agregar al carrito"
+      
+      if (err instanceof Error) {
+        errorMsg = err.message
+      }
+      
+      setErrorById(prev => ({ ...prev, [item.id]: errorMsg }))
+      
+      // Limpiar el mensaje de error después de 5 segundos
+      setTimeout(() => {
+        setErrorById(prev => ({ ...prev, [item.id]: null }))
+      }, 5000)
+    } finally {
+      // Desmarcar este ítem específico como "cargando"
+      setLoadingById(prev => ({ ...prev, [item.id]: false }))
+    }
+  }
+
+  const handleCantidadChange = (itemId: number, nuevaCantidad: number) => {
+    setQtyById(prev => ({ 
+      ...prev, 
+      [itemId]: Math.max(1, nuevaCantidad) 
+    }))
+  }
 
   // Loading state
   if (loading) {
@@ -160,56 +246,133 @@ export default function MenuPage() {
         ) : (
           /* Menu Items Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {itemMenus.map((item) => (
+            {itemMenus.map((item, idx) => (
               <div
-                key={item.id}
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
+                key={item.id ?? idx}
+                className={`bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-all cursor-pointer ${
+                  selectedItems[item.id] ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''
+                }`}
+                onClick={() => handleSelectItem(item.id)}
               >
                 <div className="p-6">
+                  {/* Indicador de selección */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems[item.id] || false}
+                        onChange={() => handleSelectItem(item.id)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        {selectedItems[item.id] ? 'Seleccionado' : 'Seleccionar'}
+                      </span>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      item.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock'}
+                    </span>
+                  </div>
+
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {item.nombre}
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-3">
-                        {item.descripcion}
-                      </p>
+                      <h3 className="text-lg font-medium text-gray-900">{item.nombre}</h3>
+                      <p className="mt-1 text-sm text-gray-600">{item.descripcion}</p>
                     </div>
                     <div className="ml-4 text-right">
-                      <span className="text-2xl font-bold text-green-600">
-                        ${item.precio}
-                      </span>
+                      <p className="text-lg font-semibold text-gray-900">${item.precio}</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {item.tipo}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.stock > 0 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.stock > 0 ? `Stock: ${item.stock}` : 'Sin stock'}
-                      </span>
+
+                  {/* Mensajes de éxito o error para este ítem específico */}
+                  {successById[item.id] && (
+                    <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded text-sm">
+                      {successById[item.id]}
                     </div>
-                  </div>
+                  )}
                   
+                  {errorById[item.id] && (
+                    <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+                      {errorById[item.id]}
+                    </div>
+                  )}
+
+                  {/* Selector de cantidad solo si está seleccionado */}
+                  {selectedItems[item.id] && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">Cantidad:</label>
+                        <div className="flex items-center border rounded-md">
+                          <button
+                            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-l-md"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const newCantidad = Math.max(1, (qtyById[item.id] || 1) - 1)
+                              handleCantidadChange(item.id, newCantidad)
+                            }}
+                            disabled={loadingById[item.id]}
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.stock}
+                            value={qtyById[item.id] || 1}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              handleCantidadChange(item.id, parseInt(e.target.value) || 1)
+                            }}
+                            className="w-12 text-center border-none focus:outline-none focus:ring-0"
+                            disabled={loadingById[item.id]}
+                          />
+                          <button
+                            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-r-md"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const newCantidad = Math.min(item.stock, (qtyById[item.id] || 1) + 1)
+                              handleCantidadChange(item.id, newCantidad)
+                            }}
+                            disabled={loadingById[item.id] || (qtyById[item.id] || 1) >= item.stock}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botón de Agregar al Carrito */}
                   <div className="mt-4">
                     <button
                       className={`w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                        item.stock > 0
+                        item.stock > 0 && selectedItems[item.id] && !loadingById[item.id]
                           ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      disabled={item.stock === 0}
+                      disabled={item.stock === 0 || !selectedItems[item.id] || loadingById[item.id]}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAgregarAlCarrito(item)
+                      }}
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.8 4m1.8-4L10 17m4 0h6m-6 0a2 2 0 11-4 0m4 0a2 2 0 104 0" />
-                      </svg>
-                      {item.stock > 0 ? 'Agregar al Carrito' : 'Sin Stock'}
+                      {loadingById[item.id] ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Agregando...
+                        </>
+                      ) : !selectedItems[item.id] ? (
+                        'Primero selecciona este item'
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.8 4m1.8-4L10 17m4 0h6m-6 0a2 2 0 11-4 0m4 0a2 2 0 104 0" />
+                          </svg>
+                          Agregar al Carrito
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
