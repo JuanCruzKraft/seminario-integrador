@@ -13,7 +13,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Cliente findByUsername(String username);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-    
+    void deleteById(Long id);
+
     // No se agrega findByApellido porque no es necesario para el registro de cliente
     // List<Cliente> findByApellidoContaining(String apellido); esta no la agrego porque no creo que la necesitemos
     //List<Cliente> findByDireccionContaining(String direccion); esta no la agrego porque no creo que la necesitemos
