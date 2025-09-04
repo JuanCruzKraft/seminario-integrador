@@ -5,13 +5,18 @@ export interface VisualizarItemMenuRequest {
 }
 
 export interface ItemMenuDTO {
-  id: number;
+  itemMenuId: number;
   nombre: string;
   descripcion?: string;
   precio: number;
   stock: number;
-  tipo: 'PLATO' | 'BEBIDA';
+  esBebida: boolean;
   vendedorid: number;
+  activo?: boolean;
+  peso?: number;
+  tamanio?: number; // Solo para bebidas
+  graduacionAlcoholica?: number; // Solo para bebidas
+  calorias?: number; // Solo para comidas
 }
 
 export interface VisualizarItemMenuResponse extends BaseResponse {

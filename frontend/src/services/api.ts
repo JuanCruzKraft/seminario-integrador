@@ -62,3 +62,6 @@ export class ApiService {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 }
+
+const api = ApiService;
+export default api;
