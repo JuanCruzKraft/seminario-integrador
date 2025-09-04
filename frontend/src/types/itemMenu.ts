@@ -11,7 +11,7 @@ export interface ItemMenuDTO {
   precio: number;
   stock: number;
   esBebida: boolean;
-  vendedorid?: number;
+  vendedorid: number;
   activo?: boolean;
   peso?: number;
   tamanio?: number; // Solo para bebidas

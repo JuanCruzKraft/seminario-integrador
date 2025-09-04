@@ -13,7 +13,7 @@ export const addItemToCarrito = async (
     headers: { 
       "Content-Type": "application/json" 
     },
-    credentials: "include", // Para cookies/sesión
+    // Removemos credentials por ahora
     body: JSON.stringify({
       clienteid: clienteId,
       vendedorid: vendedorId,

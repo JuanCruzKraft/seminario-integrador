@@ -107,7 +107,8 @@ export default function MenuPage() {
         item.itemMenuId, 
         cantidad, 
         user.idCliente, 
-        parseInt(vendedorId!)
+        item.vendedorid
+        //parseInt(vendedorId!)
       )
       
       // Mostrar mensaje de éxito solo para este ítem
