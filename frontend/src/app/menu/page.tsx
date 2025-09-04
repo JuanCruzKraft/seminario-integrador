@@ -111,11 +111,20 @@ export default function MenuPage() {
         //parseInt(vendedorId!)
       )
       
-      // Mostrar mensaje de éxito solo para este ítem
-      setSuccessById(prev => ({ 
+      // Mostrar mensaje de éxito solo para este ítem}
+      if(response.resultado.status === 0){
+              setSuccessById(prev => ({ 
         ...prev, 
         [item.itemMenuId]: "¡Producto agregado al carrito!" 
       }))
+      }else{
+        setErrorById(prev => ({ ...prev, [item.itemMenuId]: response.resultado.mensaje || "No se pudo agregar al carrito" }))
+        setTimeout(() => {
+          setErrorById(prev => ({ ...prev, [item.itemMenuId]: null }))
+        }, 5000)
+
+      }
+
       
       // Deseleccionar el item después de agregarlo
       setSelectedItems(prev => ({ ...prev, [item.itemMenuId]: false }))
