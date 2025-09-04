@@ -38,61 +38,62 @@ public class CarritoService {
 
     public AgregarItemResponseDTO agregarItem(AgregarItemRequestDTO request) {
         AgregarItemResponseDTO response = new AgregarItemResponseDTO();
+        ItemMenu item = itemMenuRepository.findById(request.itemMenuId).orElse(null);
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(request.clienteid, EstadoPedido.EN_CARRITO);
-        if(request.cantidad > itemMenuRepository.findById(request.itemMenuId).get().getStock() ) {
+        if(request.cantidad > item.getStock() ) {
             // No hay stock suficiente del itemMenu
             response.resultado.setMensaje("No hay stock suficiente del itemMenu");
             response.resultado.setStatus(400);//ver que numero poner.
             return response;
         }
         if(carrito == null) { // NO hay un carrito activo->se crea uno llamando a crearCarrito
-            carrito = crearCarrito(request.clienteid, request.vendedorid);
+            carrito = crearCarrito(request.clienteid, item.getVendedor().getVendedorid());
             //carrito = pedidoRepository.findByClienteClienteidAndEstado(request.clienteid, EstadoPedido.EN_CARRITO);
-            ItemPedido nuevoItemPedido = new ItemPedido(itemMenuRepository.findById(request.itemMenuId).get(), request.cantidad);
+            ItemPedido nuevoItemPedido = new ItemPedido(item, request.cantidad);
             nuevoItemPedido.setPedido(carrito);
             itemPedidoRepository.save(nuevoItemPedido);
             pedidoRepository.save(carrito); // Actualizar el carrito
             response.resultado.setMensaje("Item agregado al carrito");
-            response.resultado.setStatus(200); 
-            itemMenuRepository.findById(request.itemMenuId).get().setStock(itemMenuRepository.findById(request.itemMenuId).get().getStock() - request.cantidad);
-            itemMenuRepository.save(itemMenuRepository.findById(request.itemMenuId).get());
+            response.resultado.setStatus(0); 
+            item.setStock(item.getStock() - request.cantidad);
+            itemMenuRepository.save(item);
             
             return response;
         }
-        if(carrito.getVendedor().getVendedorid() != request.vendedorid) {
+        if(carrito.getVendedor().getVendedorid() != item.getVendedor().getVendedorid()) {
             // El vendedor del carrito no coincide con el vendedor del itemMenu
             // deberia dejarle opc al cliente de crear un nuevo carrito con el vendedor correcto, eliminando el actual
             response.resultado.setMensaje("El vendedor del carrito no coincide con el vendedor del itemMenu");
-            response.resultado.setStatus(400); //ver que numero poner.
+            response.resultado.setStatus(1); //ver que numero poner.
             return response;
         }
-        if(itemPedidoRepository.existsByPedidoAndItemMenu_Itemid(carrito, request.itemMenuId)) {
+        if(itemPedidoRepository.existsByPedidoAndItemMenu_Itemid(carrito, item.getItemid())) {
             // El itemMenu ya existe en el carrito, se actualiza la cantidad
             if(modificarCantidadItem(itemPedidoRepository.findByPedidoAndItemMenu_Itemid(carrito, request.itemMenuId).getItempedidoid(), request.itemMenuId ,request.cantidad)){
                 response.resultado.setMensaje("Cantidad del item actualizada en el carrito");
-                response.resultado.setStatus(200); 
+                response.resultado.setStatus(0); 
                 //itemMenuRepository.findById(request.itemMenuId).get().setStock(itemMenuRepository.findById(request.itemMenuId).get().getStock() - request.cantidad);
                 //itemMenuRepository.save(itemMenuRepository.findById(request.itemMenuId).get());
             } else {
                 response.resultado.setMensaje("No se pudo actualizar la cantidad del item en el carrito");
-                response.resultado.setStatus(500);//ver que numero poner.
+                response.resultado.setStatus(1);//ver que numero poner.
             }
             return response;
         
         } else {
             if(request.cantidad>0){
                         // camino feliz
-                ItemPedido nuevoItemPedido = new ItemPedido(itemMenuRepository.findById(request.itemMenuId).get(), request.cantidad);
+                ItemPedido nuevoItemPedido = new ItemPedido(item, request.cantidad);
                 nuevoItemPedido.setPedido(carrito);
                 itemPedidoRepository.save(nuevoItemPedido);
                 pedidoRepository.save(carrito); // Actualizar el carrito
                 response.resultado.setMensaje("Item agregado al carrito");
-                response.resultado.setStatus(200); 
-                itemMenuRepository.findById(request.itemMenuId).get().setStock(itemMenuRepository.findById(request.itemMenuId).get().getStock() - request.cantidad);
-                itemMenuRepository.save(itemMenuRepository.findById(request.itemMenuId).get());
+                response.resultado.setStatus(0); 
+                item.setStock(item.getStock() - request.cantidad);
+                itemMenuRepository.save(item);
 
             }else{
-                response.resultado.setMensaje("calmate un poco");
+                response.resultado.setMensaje("error");
                 response.resultado.setStatus(500);//ver que numero poner.
             }
             return response;
@@ -109,19 +110,26 @@ public class CarritoService {
         ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
         if (itemPedido == null) return false; 
         ItemMenu itemMenu = itemMenuRepository.findById(itemMenuId).get();
-        Integer nuevaCantidad = itemPedido.getCantidad() + cantidad;
-        if(nuevaCantidad <= 0 ){
-            itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
-            itemPedidoRepository.delete(itemPedido); // Eliminar el item si la cantidad es 0 o menor
-            itemMenuRepository.save(itemMenu);
-            return true;
+        Integer nuevaCantidadPedido = itemPedido.getCantidad() + cantidad;
+        if(nuevaCantidadPedido <= 0 ){ // si la cantidad queda cero entonces eliminamos el item del carrit
+            return eliminarItem(itemPedidoId);
         }else{
-            itemMenu.setStock(itemMenu.getStock() - nuevaCantidad);
+            itemMenu.setStock(itemMenu.getStock() - cantidad);
             itemMenuRepository.save(itemMenu);
-            itemPedido.setCantidad(nuevaCantidad);
+            itemPedido.setCantidad(nuevaCantidadPedido);
             itemPedidoRepository.save(itemPedido);
             return true;
         }
+   }
+
+   Boolean eliminarItem(Long itemPedidoId) {
+        ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
+        if (itemPedido == null) return false; 
+        ItemMenu itemMenu = itemMenuRepository.findById(itemPedido.getItemMenu().getItemid()).get();
+        itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
+        itemMenuRepository.save(itemMenu);
+        itemPedidoRepository.delete(itemPedido);
+        return true;
    }
 
 
@@ -138,7 +146,7 @@ public class CarritoService {
         nuevoCarrito.setCliente(clienteRepository.findById(clienteId).get());
         nuevoCarrito.setVendedor(vendedorRepository.findById(vendedorId).get());
         nuevoCarrito.setEstado(EstadoPedido.EN_CARRITO);
-        pedidoRepository.save(nuevoCarrito);
-        return nuevoCarrito;
+        return pedidoRepository.save(nuevoCarrito);
+        
     }
 }

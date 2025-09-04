@@ -9,7 +9,7 @@ public class AgregarItemRequestDTO {
 
     public Long clienteid;
         //definir atributos del dto aca
-    public Long vendedorid;
+    //public Long vendedorid;
     public Long itemMenuId;
     public Integer cantidad;
 

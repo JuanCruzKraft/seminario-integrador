@@ -25,7 +25,7 @@ public class CarritoController {
    // private final PedidoService pedidoService;
     
 
-    @PostMapping("/agregar-item")
+    @PostMapping("/agregarItem")
     public AgregarItemResponseDTO agregarItem(@RequestBody AgregarItemRequestDTO request) {
         return carritoService.agregarItem(request);
     }
