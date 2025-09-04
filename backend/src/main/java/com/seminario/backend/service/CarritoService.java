@@ -3,8 +3,10 @@ import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
+import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.model.ItemMenu;
@@ -98,9 +100,32 @@ public class CarritoService {
             }
             return response;
         }
-        
+    }
 
-}
+        public EliminarCarritoResponseDTO eliminarCarrito(EliminarCarritoRequestDTO request) {
+        Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(request.clienteId, EstadoPedido.EN_CARRITO);
+        EliminarCarritoResponseDTO response = new EliminarCarritoResponseDTO();
+        //encuentro pedido del id cliente en estado "EN_CARRITO"
+            //encuentro Item_pedido con "id_pedido" del anterior paso
+            //De ese item_pedido saco los "Item_menu" y cantidad
+            //luego en Item_menuRepository incremento el stock con la cantidad encontrada 
+        if (carrito != null) {
+            long pedidoId = carrito.getPedidoid();
+            for (ItemPedido itemPedido : itemPedidoRepository.findByPedido(pedidoId)) {
+                ItemMenu itemMenu = itemMenuRepository.findById(itemPedido.getItemMenu().getItemid()).get();
+                itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
+                itemMenuRepository.save(itemMenu);
+                itemPedidoRepository.delete(itemPedido);
+            }
+            pedidoRepository.delete(carrito);
+            response.resultado.setMensaje("Carrito eliminado");
+            response.resultado.setStatus(200);
+        } else {
+            response.resultado.setMensaje("Carrito no encontrado");
+            response.resultado.setStatus(404);
+        }
+        return response;
+    }
 
 
 
