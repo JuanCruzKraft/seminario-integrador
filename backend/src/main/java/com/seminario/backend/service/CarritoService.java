@@ -108,17 +108,13 @@ public class CarritoService {
 
 }
 
-public EliminarCarritoResponseDTO eliminarCarrito(EliminarCarritoRequestDTO request) {
-        //Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
-        //Pedido carrito = pedidoRepository.findById(request.pedidoId).orElse(null);
+public EliminarCarritoResponseDTO eliminarCarrito() {
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
-        System.out.println("SESION " + sesion.getIdSesionActual());
         EliminarCarritoResponseDTO response = new EliminarCarritoResponseDTO();
-        //encuentro pedido del id cliente en estado "EN_CARRITO"
-            //encuentro Item_pedido con "id_pedido" del anterior paso
-            //De ese item_pedido saco los "Item_menu" y cantidad
-            //luego en Item_menuRepository incremento el stock con la cantidad encontrada 
+
         if (carrito != null) {
+            //este for no hace falta porq los items se eliminan en cascada
+
             //long pedidoId = carrito.getPedidoid();
             // for (ItemPedido itemPedido : itemPedidoRepository.findByPedido(carrito)) {
             //     ItemMenu itemMenu = itemMenuRepository.findById(itemPedido.getItemMenu().getItemid()).get();

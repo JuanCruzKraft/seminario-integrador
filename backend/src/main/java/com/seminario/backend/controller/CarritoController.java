@@ -33,8 +33,8 @@ public class CarritoController {
     }
 
     @PostMapping("/eliminar")
-    public EliminarCarritoResponseDTO eliminarCarrito(@RequestBody EliminarCarritoRequestDTO request) {
-        return carritoService.eliminarCarrito(request);
+    public EliminarCarritoResponseDTO eliminarCarrito() {
+        return carritoService.eliminarCarrito();
     }
 
     
