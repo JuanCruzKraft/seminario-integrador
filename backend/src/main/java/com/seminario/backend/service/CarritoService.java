@@ -3,8 +3,10 @@ import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
+import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.model.ItemMenu;
@@ -15,6 +17,7 @@ import com.seminario.backend.repository.ItemMenuRepository;
 import com.seminario.backend.repository.ItemPedidoRepository;
 import com.seminario.backend.repository.PedidoRepository;
 import com.seminario.backend.repository.VendedorRepository;
+import com.seminario.backend.sesion.SesionMockeada;
 
 @Service
 public class CarritoService {
@@ -23,17 +26,20 @@ public class CarritoService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final ClienteRepository clienteRepository;
     private final VendedorRepository vendedorRepository;
+    private final SesionMockeada sesion;
     
     public CarritoService(PedidoRepository pedidoRepository, 
                          ItemMenuRepository itemMenuRepository,
                          ItemPedidoRepository itemPedidoRepository, 
                          ClienteRepository clienteRepository,
-                         VendedorRepository vendedorRepository) {
+                         VendedorRepository vendedorRepository,
+                         SesionMockeada sesion) {
         this.pedidoRepository = pedidoRepository;
         this.itemMenuRepository = itemMenuRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.clienteRepository = clienteRepository;
         this.vendedorRepository = vendedorRepository;   
+        this.sesion = sesion;
     }
 
     public AgregarItemResponseDTO agregarItem(AgregarItemRequestDTO request) {
@@ -102,7 +108,33 @@ public class CarritoService {
 
 }
 
-
+public EliminarCarritoResponseDTO eliminarCarrito(EliminarCarritoRequestDTO request) {
+        //Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
+        //Pedido carrito = pedidoRepository.findById(request.pedidoId).orElse(null);
+        Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
+        System.out.println("SESION " + sesion.getIdSesionActual());
+        EliminarCarritoResponseDTO response = new EliminarCarritoResponseDTO();
+        //encuentro pedido del id cliente en estado "EN_CARRITO"
+            //encuentro Item_pedido con "id_pedido" del anterior paso
+            //De ese item_pedido saco los "Item_menu" y cantidad
+            //luego en Item_menuRepository incremento el stock con la cantidad encontrada 
+        if (carrito != null) {
+            //long pedidoId = carrito.getPedidoid();
+            // for (ItemPedido itemPedido : itemPedidoRepository.findByPedido(carrito)) {
+            //     ItemMenu itemMenu = itemMenuRepository.findById(itemPedido.getItemMenu().getItemid()).get();
+            //     itemMenu.setStock(itemMenu.getStock() + itemPedido.getCantidad());
+            //     itemMenuRepository.save(itemMenu);
+            //     itemPedidoRepository.delete(itemPedido);
+            // }
+            pedidoRepository.delete(carrito);
+            response.resultado.setMensaje("Carrito eliminado");
+            response.resultado.setStatus(0);
+        } else {
+            response.resultado.setMensaje("Carrito no encontrado");
+            response.resultado.setStatus(404);
+        }
+        return response;
+    }
 
 
 

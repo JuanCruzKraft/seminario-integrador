@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
+import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
 import com.seminario.backend.service.CarritoService;
 import com.seminario.backend.service.PedidoService;
 
@@ -28,6 +30,11 @@ public class CarritoController {
     @PostMapping("/agregarItem")
     public AgregarItemResponseDTO agregarItem(@RequestBody AgregarItemRequestDTO request) {
         return carritoService.agregarItem(request);
+    }
+
+    @PostMapping("/eliminar")
+    public EliminarCarritoResponseDTO eliminarCarrito(@RequestBody EliminarCarritoRequestDTO request) {
+        return carritoService.eliminarCarrito(request);
     }
 
     
