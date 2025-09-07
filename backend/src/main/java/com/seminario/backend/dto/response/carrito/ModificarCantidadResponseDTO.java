@@ -2,10 +2,10 @@ package com.seminario.backend.dto.response.carrito;
 
 import com.seminario.backend.dto.ResultadoOperacion;
 
-public class EliminarItemResponseDTO {
+public class ModificarCantidadResponseDTO {
     public ResultadoOperacion resultado;
 
-    public EliminarItemResponseDTO() {
+    public ModificarCantidadResponseDTO() {
         this.resultado = new ResultadoOperacion();
     }
 }
