@@ -1,6 +1,7 @@
 package com.seminario.backend.controller;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
 import com.seminario.backend.service.CarritoService;
 import com.seminario.backend.service.PedidoService;
 
@@ -36,6 +38,12 @@ public class CarritoController {
     public EliminarCarritoResponseDTO eliminarCarrito() {
         return carritoService.eliminarCarrito();
     }
+
+    @GetMapping("/ver")
+    public VisualizarCarritoResponseDTO visualizarCarrito() {
+        return carritoService.visualizarCarrito();
+    }
+
 
     
 }
