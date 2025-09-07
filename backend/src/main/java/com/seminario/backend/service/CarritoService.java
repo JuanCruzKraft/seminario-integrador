@@ -1,12 +1,18 @@
 package com.seminario.backend.service;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 
+import com.seminario.backend.dto.ItemPedidoDTO;
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.model.ItemMenu;
@@ -27,19 +33,22 @@ public class CarritoService {
     private final ClienteRepository clienteRepository;
     private final VendedorRepository vendedorRepository;
     private final SesionMockeada sesion;
+    private final EnvioService envioService;
     
     public CarritoService(PedidoRepository pedidoRepository, 
                          ItemMenuRepository itemMenuRepository,
                          ItemPedidoRepository itemPedidoRepository, 
                          ClienteRepository clienteRepository,
                          VendedorRepository vendedorRepository,
-                         SesionMockeada sesion) {
+                         SesionMockeada sesion,
+                         EnvioService envioService) {
         this.pedidoRepository = pedidoRepository;
         this.itemMenuRepository = itemMenuRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.clienteRepository = clienteRepository;
         this.vendedorRepository = vendedorRepository;   
         this.sesion = sesion;
+        this.envioService = envioService;
     }
 
     public AgregarItemResponseDTO agregarItem(AgregarItemRequestDTO request) {
@@ -108,7 +117,7 @@ public class CarritoService {
 
 }
 
-public EliminarCarritoResponseDTO eliminarCarrito() {
+    public EliminarCarritoResponseDTO eliminarCarrito() {
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
         EliminarCarritoResponseDTO response = new EliminarCarritoResponseDTO();
 
@@ -132,8 +141,41 @@ public EliminarCarritoResponseDTO eliminarCarrito() {
         return response;
     }
 
+    public VisualizarCarritoResponseDTO visualizarCarrito() {
 
+        VisualizarCarritoResponseDTO response = new VisualizarCarritoResponseDTO();
+        Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
+        if (carrito != null) {
+            Set<ItemPedido> itemsPedido = itemPedidoRepository.findByPedido(carrito);
+            Double subtotalItemsPedido = 0.0;
+            response.items = new ArrayList<>();
+            for(ItemPedido itemPedido:itemsPedido){
+                ItemPedidoDTO itemPedidoDto = new ItemPedidoDTO();
+                itemPedidoDto.nombre = itemPedido.getItemMenu().getNombre();
+                itemPedidoDto.precioUnitario = itemPedido.getItemMenu().getPrecio();
+                itemPedidoDto.cantidad = itemPedido.getCantidad();
+                itemPedidoDto.subtotal = itemPedido.getItemMenu().getPrecio() * itemPedido.getCantidad();
+                subtotalItemsPedido += itemPedidoDto.subtotal;
+                response.items.add(itemPedidoDto);
+            }
+            response.distancia = envioService.calcularDistancia(
+                carrito.getVendedor().getCoordenadas(),
+                carrito.getCliente().getCoordenadas()   
+            );
+            response.costoEnvio = envioService.calcularCostoEnvio(response.distancia);
+            response.tiempo = envioService.calcularTiempoEnvio(response.distancia);
+            response.resultado.setMensaje("Carrito encontrado");
+            response.resultado.setStatus(0);
+            response.subtotalTotal = subtotalItemsPedido + response.costoEnvio;
+            response.direccionEntrega = carrito.getCliente().getDireccion();
 
+        } else {
+            response.resultado.setMensaje("Carrito no encontrado");
+            response.resultado.setStatus(1);
+        }
+        return response;
+
+}
    Boolean modificarCantidadItem(Long itemPedidoId, Long itemMenuId, int cantidad) {
         ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
         if (itemPedido == null) return false; 
@@ -159,15 +201,10 @@ public EliminarCarritoResponseDTO eliminarCarrito() {
         itemPedidoRepository.delete(itemPedido);
         return true;
    }
-
-
    
    Boolean tieneStock(Long itemMenuId, int cantidad) {
         return itemMenuRepository.findById(itemMenuId).get().getStock() >= cantidad;
     }
-
-
-
 
     Pedido crearCarrito(Long clienteId, Long vendedorId) {
         Pedido nuevoCarrito = new Pedido();
@@ -177,4 +214,6 @@ public EliminarCarritoResponseDTO eliminarCarrito() {
         return pedidoRepository.save(nuevoCarrito);
         
     }
+
+
 }
