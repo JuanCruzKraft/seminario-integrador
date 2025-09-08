@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 /* La idea de esto es que simule una sesion activa. solo se puede un  usuario a la vez.*/
 @Component
 public class SesionMockeada {
-    private Long idSesionActual;
+    private Long idSesionActual = 1L; // Valor por defecto para testing
     private String username;
     private String password;
 

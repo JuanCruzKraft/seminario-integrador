@@ -29,6 +29,7 @@ public class Pedido {
     private Double precio;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private EstadoPedido estado;
 
     @Column
@@ -36,14 +37,18 @@ public class Pedido {
 
     @Column //no deberia ser nullable
     private boolean modificado;
+    
+    @Column 
+    private Integer tiempo_envio;
 
-    //falta - metodoPago: EstrategiaPago
+    @Column
+    private Double subTotal_Total;
 
     @Column //no deberia ser nullable
     private double distanciaEnvio;
 
     @Column //no deberia ser nullable
-    private double costoEnvio ;
+    private double costoEnvio;
 
     @Column //no deberia ser nullable
     private LocalDateTime fechaModificacion;
@@ -58,6 +63,8 @@ public class Pedido {
 
     @OneToOne(mappedBy = "pedido") //, cascade = CascadeType.ALL)
     private Calificacion calificacion;
+
+    public Double setSubTotal_Total;
 
     public Pedido(Vendedor vendedor, Cliente cliente) {
         this.vendedor = vendedor;
