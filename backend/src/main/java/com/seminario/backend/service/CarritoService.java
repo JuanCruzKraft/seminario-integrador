@@ -183,7 +183,7 @@ public class CarritoService {
 
     }
 
-    public ModificarCantidadResponseDTO modificarCantidadItemPublic(ModificarCantidadRequestDTO request) {
+    public ModificarCantidadResponseDTO modificarCantidadItem(ModificarCantidadRequestDTO request) {
         ModificarCantidadResponseDTO response = new ModificarCantidadResponseDTO();
         
         try {
@@ -245,7 +245,24 @@ public class CarritoService {
         return response;
     }
 
-    public EliminarItemResponseDTO eliminarItemPublic(EliminarItemRequestDTO request) {
+    //ver de borrar esto si no se usa, para no tener duplicado con el de arriba
+       Boolean modificarCantidadItem(Long itemPedidoId, Long itemMenuId, int cantidad) {
+        ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
+        if (itemPedido == null) return false; 
+        ItemMenu itemMenu = itemMenuRepository.findById(itemMenuId).get();
+        Integer nuevaCantidadPedido = itemPedido.getCantidad() + cantidad;
+        if(nuevaCantidadPedido <= 0 ){ // si la cantidad queda cero entonces eliminamos el item del carrit
+            return eliminarItem(itemPedidoId);
+        }else{
+            itemMenu.setStock(itemMenu.getStock() - cantidad);
+            itemMenuRepository.save(itemMenu);
+            itemPedido.setCantidad(nuevaCantidadPedido);
+            itemPedidoRepository.save(itemPedido);
+            return true;
+        }
+   }
+
+    public EliminarItemResponseDTO eliminarItem(EliminarItemRequestDTO request) {
         EliminarItemResponseDTO response = new EliminarItemResponseDTO();
         
         try {
@@ -279,21 +296,7 @@ public class CarritoService {
         return response;
     }
 
-   Boolean modificarCantidadItem(Long itemPedidoId, Long itemMenuId, int cantidad) {
-        ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
-        if (itemPedido == null) return false; 
-        ItemMenu itemMenu = itemMenuRepository.findById(itemMenuId).get();
-        Integer nuevaCantidadPedido = itemPedido.getCantidad() + cantidad;
-        if(nuevaCantidadPedido <= 0 ){ // si la cantidad queda cero entonces eliminamos el item del carrit
-            return eliminarItem(itemPedidoId);
-        }else{
-            itemMenu.setStock(itemMenu.getStock() - cantidad);
-            itemMenuRepository.save(itemMenu);
-            itemPedido.setCantidad(nuevaCantidadPedido);
-            itemPedidoRepository.save(itemPedido);
-            return true;
-        }
-   }
+
 
    Boolean eliminarItem(Long itemPedidoId) {
         ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);

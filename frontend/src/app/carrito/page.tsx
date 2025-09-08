@@ -325,7 +325,7 @@ export default function CarritoPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Distancia:</span>
                       <span className="text-gray-900">
-                        {(carrito.distancia / 1000).toFixed(2)} km
+                        {(carrito.distancia).toFixed(2)} km
                       </span>
                     </div>
                     <div className="flex justify-between">

@@ -50,12 +50,12 @@ public class CarritoController {
 
     @PostMapping("/modificarCantidad")
     public ModificarCantidadResponseDTO modificarCantidad(@RequestBody ModificarCantidadRequestDTO request) {
-        return carritoService.modificarCantidadItemPublic(request);
+        return carritoService.modificarCantidadItem(request);
     }
 
     @PostMapping("/eliminarItem")
     public EliminarItemResponseDTO eliminarItem(@RequestBody EliminarItemRequestDTO request) {
-        return carritoService.eliminarItemPublic(request);
+        return carritoService.eliminarItem(request);
     }
 
 
