@@ -9,9 +9,13 @@ import com.seminario.backend.dto.ItemPedidoDTO;
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
+import com.seminario.backend.dto.request.carrito.EliminarItemRequestDTO;
+import com.seminario.backend.dto.request.carrito.ModificarCantidadRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.EliminarItemResponseDTO;
+import com.seminario.backend.dto.response.carrito.ModificarCantidadResponseDTO;
 import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.model.Cliente;
@@ -151,6 +155,8 @@ public class CarritoService {
             response.items = new ArrayList<>();
             for(ItemPedido itemPedido:itemsPedido){
                 ItemPedidoDTO itemPedidoDto = new ItemPedidoDTO();
+                itemPedidoDto.itemPedidoId = itemPedido.getItempedidoid();
+                itemPedidoDto.itemMenuId = itemPedido.getItemMenu().getItemid();
                 itemPedidoDto.nombre = itemPedido.getItemMenu().getNombre();
                 itemPedidoDto.precioUnitario = itemPedido.getItemMenu().getPrecio();
                 itemPedidoDto.cantidad = itemPedido.getCantidad();
@@ -175,8 +181,72 @@ public class CarritoService {
         }
         return response;
 
-}
-   Boolean modificarCantidadItem(Long itemPedidoId, Long itemMenuId, int cantidad) {
+    }
+
+    public ModificarCantidadResponseDTO modificarCantidadItem(ModificarCantidadRequestDTO request) {
+        ModificarCantidadResponseDTO response = new ModificarCantidadResponseDTO();
+        
+        try {
+            ItemPedido itemPedido = itemPedidoRepository.findById(request.itemPedidoId).orElse(null);
+            if (itemPedido == null) {
+                response.resultado.setStatus(404);
+                response.resultado.setMensaje("Item del pedido no encontrado");
+                return response;
+            }
+
+            // Verificar que el item pertenece al carrito del cliente logueado
+            if (!itemPedido.getPedido().getCliente().getClienteid().equals(sesion.getIdSesionActual())) {
+                response.resultado.setStatus(403);
+                response.resultado.setMensaje("No tienes permisos para modificar este item");
+                return response;
+            }
+
+            ItemMenu itemMenu = itemMenuRepository.findById(request.itemMenuId).orElse(null);
+            if (itemMenu == null) {
+                response.resultado.setStatus(404);
+                response.resultado.setMensaje("Item del menú no encontrado");
+                return response;
+            }
+
+            // Calcular diferencia de cantidad
+            int diferenciaStock = request.nuevaCantidad - itemPedido.getCantidad();
+            
+            // Verificar stock disponible si se está aumentando la cantidad
+            if (diferenciaStock > 0 && itemMenu.getStock() < diferenciaStock) {
+                response.resultado.setStatus(400);
+                response.resultado.setMensaje("No hay stock suficiente");
+                return response;
+            }
+
+            // Si la nueva cantidad es 0 o menor, eliminar el item
+            if (request.nuevaCantidad <= 0) {
+                eliminarItem(itemPedido.getItempedidoid());
+                response.resultado.setStatus(0);
+                response.resultado.setMensaje("Item eliminado del carrito");
+                return response;
+            }
+
+            // Actualizar stock del item menu
+            itemMenu.setStock(itemMenu.getStock() - diferenciaStock);
+            itemMenuRepository.save(itemMenu);
+
+            // Actualizar cantidad del item pedido
+            itemPedido.setCantidad(request.nuevaCantidad);
+            itemPedidoRepository.save(itemPedido);
+
+            response.resultado.setStatus(0);
+            response.resultado.setMensaje("Cantidad modificada exitosamente");
+            
+        } catch (Exception e) {
+            response.resultado.setStatus(500);
+            response.resultado.setMensaje("Error interno del servidor: " + e.getMessage());
+        }
+        
+        return response;
+    }
+
+    //ver de borrar esto si no se usa, para no tener duplicado con el de arriba
+       Boolean modificarCantidadItem(Long itemPedidoId, Long itemMenuId, int cantidad) {
         ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);
         if (itemPedido == null) return false; 
         ItemMenu itemMenu = itemMenuRepository.findById(itemMenuId).get();
@@ -191,6 +261,42 @@ public class CarritoService {
             return true;
         }
    }
+
+    public EliminarItemResponseDTO eliminarItem(EliminarItemRequestDTO request) {
+        EliminarItemResponseDTO response = new EliminarItemResponseDTO();
+        
+        try {
+            ItemPedido itemPedido = itemPedidoRepository.findById(request.itemPedidoId).orElse(null);
+            if (itemPedido == null) {
+                response.resultado.setStatus(404);
+                response.resultado.setMensaje("Item del pedido no encontrado");
+                return response;
+            }
+
+            // Verificar que el item pertenece al carrito del cliente logueado
+            if (!itemPedido.getPedido().getCliente().getClienteid().equals(sesion.getIdSesionActual())) {
+                response.resultado.setStatus(403);
+                response.resultado.setMensaje("No tienes permisos para eliminar este item");
+                return response;
+            }
+
+            if (eliminarItem(itemPedido.getItempedidoid())) {
+                response.resultado.setStatus(0);
+                response.resultado.setMensaje("Item eliminado exitosamente del carrito");
+            } else {
+                response.resultado.setStatus(500);
+                response.resultado.setMensaje("No se pudo eliminar el item del carrito");
+            }
+            
+        } catch (Exception e) {
+            response.resultado.setStatus(500);
+            response.resultado.setMensaje("Error interno del servidor: " + e.getMessage());
+        }
+        
+        return response;
+    }
+
+
 
    Boolean eliminarItem(Long itemPedidoId) {
         ItemPedido itemPedido = itemPedidoRepository.findById(itemPedidoId).orElse(null);

@@ -10,9 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
+import com.seminario.backend.dto.request.carrito.EliminarItemRequestDTO;
+import com.seminario.backend.dto.request.carrito.ModificarCantidadRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
+import com.seminario.backend.dto.response.carrito.EliminarItemResponseDTO;
+import com.seminario.backend.dto.response.carrito.ModificarCantidadResponseDTO;
 import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
 import com.seminario.backend.service.CarritoService;
 import com.seminario.backend.service.PedidoService;
@@ -42,6 +46,16 @@ public class CarritoController {
     @GetMapping("/ver")
     public VisualizarCarritoResponseDTO visualizarCarrito() {
         return carritoService.visualizarCarrito();
+    }
+
+    @PostMapping("/modificarCantidad")
+    public ModificarCantidadResponseDTO modificarCantidad(@RequestBody ModificarCantidadRequestDTO request) {
+        return carritoService.modificarCantidadItem(request);
+    }
+
+    @PostMapping("/eliminarItem")
+    public EliminarItemResponseDTO eliminarItem(@RequestBody EliminarItemRequestDTO request) {
+        return carritoService.eliminarItem(request);
     }
 
 

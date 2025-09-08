@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useCarrito } from '@/contexts/CarritoContext'
 import { getVendedores } from '@/services/vendedorService'
+import CarritoDropdown from '@/components/CarritoDropdown'
 import { VendedorDTO } from '@/types/vendedor'
 
 export default function VendedoresPage() {
   const { user, loading, isAuthenticated } = useAuth()
+  const { refreshCarrito } = useCarrito()
   const router = useRouter()
   const [vendedores, setVendedores] = useState<VendedorDTO[]>([])
   const [loadingVendedores, setLoadingVendedores] = useState(false)
@@ -30,6 +33,13 @@ export default function VendedoresPage() {
       setError('No se encontraron las coordenadas de tu dirección. Por favor, establece tu dirección en tu perfil.')
     }
   }, [isAuthenticated, user])
+
+  // Cargar carrito cuando se autentica el usuario
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCarrito()
+    }
+  }, [isAuthenticated, refreshCarrito])
 
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
@@ -72,7 +82,8 @@ export default function VendedoresPage() {
                 Vendedores Disponibles
               </h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <CarritoDropdown />
               <div className="text-sm text-gray-600">
                 <span className="font-medium">Bienvenido, {user?.nombre}</span>
               </div>

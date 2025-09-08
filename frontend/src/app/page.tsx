@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useCarrito } from '@/contexts/CarritoContext'
 import { getVendedores } from '@/services/vendedorService'
 import { VendedorDTO } from '@/types/vendedor'
 
 export default function Home() {
   const { user, loading, logout, isAuthenticated } = useAuth()
+  const { getTotalItems, refreshCarrito } = useCarrito()
   const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [vendedores, setVendedores] = useState<VendedorDTO[]>([])
@@ -19,6 +21,13 @@ export default function Home() {
       router.push('/login')
     }
   }, [loading, isAuthenticated, router])
+
+  // Cargar carrito cuando el usuario esté autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCarrito()
+    }
+  }, [isAuthenticated, refreshCarrito])
 
   // Cargar vendedores cuando el usuario esté autenticado y tenga coordenadas
   useEffect(() => {
@@ -47,6 +56,12 @@ export default function Home() {
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
   }
+
+  const handleVerCarrito = () => {
+    router.push('/carrito')
+  }
+
+  const totalItemsCarrito = getTotalItems()
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -214,15 +229,18 @@ export default function Home() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {user?.coordenadas ? '✓' : '✗'}
+                    Calmate un poco
                   </p>
-                  <p className="text-sm text-gray-500">Dirección configurada</p>
+                  <p className="text-sm text-gray-500">Algo vamos a poner aca nose</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow">
+          <button
+            onClick={handleVerCarrito}
+            className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+          >
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -231,12 +249,22 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">0</p>
+                  <p className="text-2xl font-semibold text-gray-900">{totalItemsCarrito}</p>
                   <p className="text-sm text-gray-500">Items en carrito</p>
                 </div>
+                <div className="ml-auto">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="mt-3">
+                {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  Ver carrito →
+                </span> */}
               </div>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Sección de Vendedores */}

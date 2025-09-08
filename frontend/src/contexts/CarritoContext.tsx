@@ -1,4 +1,6 @@
-import { useState, useCallback } from 'react'
+'use client'
+
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { visualizarCarrito } from '@/services/carritoService'
 import type { ItemPedidoDTO } from '@/types/carrito'
 
@@ -13,6 +15,13 @@ interface CarritoState {
   error: string | null
 }
 
+interface CarritoContextType {
+  carrito: CarritoState
+  refreshCarrito: () => Promise<void>
+  getTotalItems: () => number
+  getSubtotalItems: () => number
+}
+
 const initialState: CarritoState = {
   items: [],
   costoEnvio: 0,
@@ -24,7 +33,9 @@ const initialState: CarritoState = {
   error: null
 }
 
-export const useCarrito = () => {
+const CarritoContext = createContext<CarritoContextType | undefined>(undefined)
+
+export function CarritoProvider({ children }: { children: ReactNode }) {
   const [carrito, setCarrito] = useState<CarritoState>(initialState)
 
   const refreshCarrito = useCallback(async () => {
@@ -49,7 +60,7 @@ export const useCarrito = () => {
         setCarrito({
           ...initialState,
           loading: false,
-          error: response.resultado.mensaje || 'No se pudo cargar el carrito'
+          error: null // No mostrar error para carrito vacío
         })
       }
     } catch (error) {
@@ -61,19 +72,32 @@ export const useCarrito = () => {
     }
   }, [])
 
-  const getTotalItems = () => {
+  const getTotalItems = useCallback(() => {
     return carrito.items.reduce((total, item) => total + item.cantidad, 0)
-  }
+  }, [carrito.items])
 
-  const getSubtotalItems = () => {
+  const getSubtotalItems = useCallback(() => {
     return carrito.items.reduce((total, item) => total + item.subtotal, 0)
-  }
+  }, [carrito.items])
 
-  return {
+  const value = {
     carrito,
-    setCarrito,
     refreshCarrito,
     getTotalItems,
     getSubtotalItems
   }
+
+  return (
+    <CarritoContext.Provider value={value}>
+      {children}
+    </CarritoContext.Provider>
+  )
+}
+
+export function useCarrito() {
+  const context = useContext(CarritoContext)
+  if (context === undefined) {
+    throw new Error('useCarrito must be used within a CarritoProvider')
+  }
+  return context
 }

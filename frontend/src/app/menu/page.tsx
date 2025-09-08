@@ -4,15 +4,16 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useCarrito } from '@/hooks/useCarrito'
+import { useCarrito } from '@/contexts/CarritoContext'
 import { getItemMenusByVendedor } from '@/services/itemMenuService'
 import { addItemToCarrito } from '@/services/carritoService'
+import CarritoDropdown from '@/components/CarritoDropdown'
 import type { ItemMenuDTO } from '@/types/itemMenu'
 import axios from 'axios'
 
 export default function MenuPage() {
   const { user, loading, isAuthenticated } = useAuth()
-  const { carrito, setCarrito } = useCarrito()
+  const { refreshCarrito } = useCarrito()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [itemMenus, setItemMenus] = useState<ItemMenuDTO[]>([])
@@ -59,6 +60,13 @@ export default function MenuPage() {
         .finally(() => setLoadingMenu(false))
     }
   }, [isAuthenticated, vendedorId])
+
+  // Cargar carrito cuando se autentica el usuario
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCarrito()
+    }
+  }, [isAuthenticated, refreshCarrito])
 
   // Redirect if no vendedor ID
   useEffect(() => {
@@ -117,6 +125,9 @@ export default function MenuPage() {
         ...prev, 
         [item.itemMenuId]: "¡Producto agregado al carrito!" 
       }))
+      
+      // Actualizar el carrito después de agregar el item
+      refreshCarrito()
       }else{
         setErrorById(prev => ({ ...prev, [item.itemMenuId]: response.resultado.mensaje || "No se pudo agregar al carrito" }))
         setTimeout(() => {
@@ -198,7 +209,8 @@ export default function MenuPage() {
                 Menú de {vendedorNombre || 'Vendedor'}
               </h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <CarritoDropdown />
               <div className="text-sm text-gray-600">
                 <span className="font-medium">Bienvenido, {user?.nombre}</span>
               </div>
