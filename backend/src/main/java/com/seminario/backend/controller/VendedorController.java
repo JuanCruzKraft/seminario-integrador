@@ -10,6 +10,7 @@ import com.seminario.backend.service.VendedorService;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -31,7 +32,7 @@ public class VendedorController {
         return vendedorService.visualizarVendedores(); 
     }
     
-    @GetMapping("/listar-menu-contiene")
+    @PostMapping("/listar-menu-contiene")
     public VisualizarVendedoresResponseDTO visualizarVendedorQueVenden(@RequestBody VisualizarVendedorQueVendeDTORequest request){
         return vendedorService.visualizarVendedorQueVenden(request.nombreProducto);
     }

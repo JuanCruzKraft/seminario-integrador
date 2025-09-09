@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useCarrito } from '@/contexts/CarritoContext'
-import { getVendedores } from '@/services/vendedorService'
+import { getVendedores, buscarVendedoresPorComida } from '@/services/vendedorService'
 import CarritoDropdown from '@/components/CarritoDropdown'
 import { VendedorDTO } from '@/types/vendedor'
 
@@ -15,6 +15,8 @@ export default function VendedoresPage() {
   const [vendedores, setVendedores] = useState<VendedorDTO[]>([])
   const [loadingVendedores, setLoadingVendedores] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [modoLista, setModoLista] = useState<'todos' | 'busqueda'>('todos')
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -24,11 +26,7 @@ export default function VendedoresPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      setLoadingVendedores(true)
-      getVendedores()
-        .then(setVendedores)
-        .catch(() => setError('No se pudieron cargar los vendedores.'))
-        .finally(() => setLoadingVendedores(false))
+      cargarTodosLosVendedores()
     }
   }, [isAuthenticated])
 
@@ -41,6 +39,44 @@ export default function VendedoresPage() {
 
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
+  }
+
+  const cargarTodosLosVendedores = async () => {
+    setLoadingVendedores(true)
+    setError(null)
+    try {
+      const vendedoresData = await getVendedores()
+      setVendedores(vendedoresData)
+      setModoLista('todos')
+    } catch (error) {
+      setError('No se pudieron cargar los vendedores.')
+    } finally {
+      setLoadingVendedores(false)
+    }
+  }
+
+  const buscarVendedores = async () => {
+    if (!busqueda.trim()) {
+      cargarTodosLosVendedores()
+      return
+    }
+
+    setLoadingVendedores(true)
+    setError(null)
+    try {
+      const vendedoresData = await buscarVendedoresPorComida(busqueda.trim())
+      setVendedores(vendedoresData)
+      setModoLista('busqueda')
+    } catch (error) {
+      setError('No se pudieron buscar los vendedores.')
+    } finally {
+      setLoadingVendedores(false)
+    }
+  }
+
+  const limpiarBusqueda = () => {
+    setBusqueda('')
+    cargarTodosLosVendedores()
   }
 
   // Loading state
@@ -107,6 +143,54 @@ export default function VendedoresPage() {
           </div>
         </div>
 
+        {/* Búsqueda por comida */}
+        <div className="mb-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">¿Qué quieres consumir? </h3>
+              {modoLista === 'busqueda' && (
+                <button
+                  onClick={limpiarBusqueda}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Ver todos los vendedores
+                </button>
+              )}
+            </div>
+            <div className="flex space-x-4">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Ej: pizza, hamburguesa, sushi..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && buscarVendedores()}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <button
+                onClick={buscarVendedores}
+                disabled={loadingVendedores}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {loadingVendedores ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                )}
+                <span>Buscar</span>
+              </button>
+            </div>
+            {modoLista === 'busqueda' && (
+              <div className="mt-3 text-sm text-gray-600">
+                Mostrando vendedores que tienen "{busqueda}" en su menú
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -132,26 +216,40 @@ export default function VendedoresPage() {
           <div className="bg-white shadow rounded-lg p-12">
             <div className="text-center">
               <div className="text-6xl mb-4">
-                {!user?.coordenadas ? '📍' : '🍽️'}
+                {modoLista === 'busqueda' ? '🔍' : (!user?.coordenadas ? '📍' : '🍽️')}
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {!user?.coordenadas 
-                  ? 'Configura tu dirección' 
-                  : 'No hay vendedores disponibles'
+                {modoLista === 'busqueda' 
+                  ? 'No se encontraron vendedores' 
+                  : (!user?.coordenadas 
+                    ? 'Configura tu dirección' 
+                    : 'No hay vendedores disponibles'
+                  )
                 }
               </h3>
               <p className="text-gray-500 mb-6">
-                {!user?.coordenadas 
-                  ? 'Para ver los vendedores disponibles y calcular costos de envío, necesitas configurar tu dirección.' 
-                  : 'Por el momento no hay restaurantes disponibles en tu zona.'
+                {modoLista === 'busqueda' 
+                  ? `No hay vendedores que vendan "${busqueda}" en su menú. Intenta con otra búsqueda.`
+                  : (!user?.coordenadas 
+                    ? 'Para ver los vendedores disponibles y calcular costos de envío, necesitas configurar tu dirección.' 
+                    : 'Por el momento no hay restaurantes disponibles en tu zona.'
+                  )
                 }
               </p>
               <button
                 onClick={() => router.push(!user?.coordenadas ? '/establecer-direccion' : '/')}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors mr-4"
               >
                 {!user?.coordenadas ? 'Configurar Dirección' : 'Volver al Dashboard'}
               </button>
+              {modoLista === 'busqueda' && (
+                <button
+                  onClick={limpiarBusqueda}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Ver todos los vendedores
+                </button>
+              )}
             </div>
           </div>
         ) : (
