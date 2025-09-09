@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.CalcularDatosLogisticosResponse;
 import com.seminario.backend.dto.VendedorDTO;
+import com.seminario.backend.dto.response.VisualizarItemMenuResponseDTO;
 import com.seminario.backend.dto.response.VisualizarVendedoresResponseDTO;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.model.Vendedor;
@@ -33,6 +34,12 @@ public class VendedorService {
     public VisualizarVendedoresResponseDTO visualizarVendedores() {
         VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
         
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
         try {
             List<Vendedor> vendedores = vendedorRepository.findAll();
             if (vendedores.isEmpty()) {
@@ -94,7 +101,13 @@ public class VendedorService {
 
     public VisualizarVendedoresResponseDTO visualizarVendedorQueVenden(String nombreProducto) {
     VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
-        
+               
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
         try {
             List<Vendedor> vendedores = vendedorRepository.findByItemsMenuNombreContaining(nombreProducto);
             if (vendedores.isEmpty()) {
@@ -155,7 +168,13 @@ public class VendedorService {
 
     public VisualizarVendedoresResponseDTO buscarVendedoresPorNombre(String nombreVendedor) {
         VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
-        
+               
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
         try {
             List<Vendedor> vendedores = vendedorRepository.findByNombreContaining(nombreVendedor);
             if (vendedores.isEmpty()) {

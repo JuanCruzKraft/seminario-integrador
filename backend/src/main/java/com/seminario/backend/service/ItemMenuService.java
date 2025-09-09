@@ -16,18 +16,24 @@ import com.seminario.backend.model.ItemMenu;
 import com.seminario.backend.model.Plato;
 import com.seminario.backend.model.Vendedor;
 import com.seminario.backend.repository.ItemMenuRepository;
+import com.seminario.backend.sesion.SesionMockeada;
 import com.seminario.backend.dto.VendedorResumenDTO; 
 @Service
 public class ItemMenuService {
     private final ItemMenuRepository itemMenuRepository;
-
-    public ItemMenuService(ItemMenuRepository itemMenuRepository) {
+    private final SesionMockeada sesion;
+    public ItemMenuService(ItemMenuRepository itemMenuRepository, SesionMockeada sesion) {
         this.itemMenuRepository = itemMenuRepository;
+        this.sesion = sesion;
     }
 
     public VisualizarItemMenuResponseDTO visualizarItemMenu(VisualizarItemMenuRequestDTO request) {
        VisualizarItemMenuResponseDTO response = new VisualizarItemMenuResponseDTO();
-        
+            if(sesion.getIdSesionActual() == null) {
+        response.resultado.setStatus(401);
+        response.resultado.setMensaje("No hay un cliente autenticado.");
+        return response;
+    }
         try {
             List<ItemMenu> itemMenus = itemMenuRepository.findByVendedor_vendedorid(request.vendedorid);
             if (itemMenus.isEmpty()) {

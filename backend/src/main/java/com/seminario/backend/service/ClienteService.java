@@ -52,7 +52,7 @@ public class ClienteService {
 
     public RegistrarClienteResponseDTO registrarCliente(@Valid RegistrarClienteRequestDTO request) {
         RegistrarClienteResponseDTO response = new RegistrarClienteResponseDTO();
-
+    
         if(clienteRepository.existsByUsername(request.getUsername())) {
             response.resultado.status= 1;
             response.resultado.mensaje = "El nombre de usuario ya está en uso.";
@@ -129,12 +129,17 @@ public class ClienteService {
     public ResponseEntity<String> eliminarCuenta() {
         Long idUsuarioActual = sesion.getIdSesionActual();
         if (idUsuarioActual == null) {
-            return ResponseEntity.status(401).body("Ningún usuario está logueado");
+            return ResponseEntity.status(401).body("No hay un cliente autenticado.");
         }
         if (!clienteRepository.existsById(idUsuarioActual)) {
             return ResponseEntity.status(404).body("El usuario no existe");
         }
         
+
+        
+ 
+
+
         Cliente cliente = clienteRepository.findById(idUsuarioActual).orElse(null);
         if (cliente != null) {
             // Marcar como inactivo (soft delete)
