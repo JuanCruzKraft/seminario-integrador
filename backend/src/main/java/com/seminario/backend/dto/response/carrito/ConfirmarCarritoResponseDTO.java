@@ -12,6 +12,8 @@ public class ConfirmarCarritoResponseDTO {
      private List<MetodoPago> metodosDisponibles;
      private Long vendedorId;
      private String vendedorNombre;
+     private String vendedorCuit;
+     private String vendedorCbu;
      public ResultadoOperacion resultado = new ResultadoOperacion();
      
      public ConfirmarCarritoResponseDTO() {
@@ -56,5 +58,21 @@ public class ConfirmarCarritoResponseDTO {
      
      public void setVendedorNombre(String vendedorNombre) {
          this.vendedorNombre = vendedorNombre;
+     }
+     
+     public String getVendedorCuit() {
+         return vendedorCuit;
+     }
+     
+     public void setVendedorCuit(String vendedorCuit) {
+         this.vendedorCuit = vendedorCuit;
+     }
+     
+     public String getVendedorCbu() {
+         return vendedorCbu;
+     }
+     
+     public void setVendedorCbu(String vendedorCbu) {
+         this.vendedorCbu = vendedorCbu;
      }
 }

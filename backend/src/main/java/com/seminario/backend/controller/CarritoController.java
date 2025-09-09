@@ -59,11 +59,6 @@ public class CarritoController {
     public EliminarItemResponseDTO eliminarItem(@RequestBody EliminarItemRequestDTO request) {
         return carritoService.eliminarItem(request);
     }
-
-/*@PostMapping("/confirmarCarrito")
-    public ConfirmarCarritoResponseDTO confirmarCarrito() {
-        return carritoService.prepararPago();
-    } */
     
     
 }

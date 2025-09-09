@@ -71,6 +71,10 @@ public class Pago {
      public void setMetodoPago(MetodoPagoInterface metodo) {
         this.metodo = metodo;
     }
+    
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
+    }
     // Método para obtener un resumen del pago, no lo vamos a usar pero lo dejo para revisar
     public String getResumen() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

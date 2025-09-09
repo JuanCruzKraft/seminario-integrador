@@ -339,9 +339,4 @@ public class CarritoService {
         
         return carritoGuardado;
     }
-
-    public ConfirmarCarritoResponseDTO prepararPago() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'prepararPago'");
-    }
 }
