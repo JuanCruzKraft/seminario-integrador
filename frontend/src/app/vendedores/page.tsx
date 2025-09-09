@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useCarrito } from '@/contexts/CarritoContext'
-import { getVendedores } from '@/services/vendedorService'
+import { getVendedores, buscarVendedoresPorComida, buscarVendedoresPorNombre as buscarVendedoresPorNombreService } from '@/services/vendedorService'
 import CarritoDropdown from '@/components/CarritoDropdown'
 import { VendedorDTO } from '@/types/vendedor'
 
@@ -15,6 +15,11 @@ export default function VendedoresPage() {
   const [vendedores, setVendedores] = useState<VendedorDTO[]>([])
   const [loadingVendedores, setLoadingVendedores] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [busquedaNombre, setBusquedaNombre] = useState('')
+  const [modoLista, setModoLista] = useState<'todos' | 'busqueda' | 'busqueda-nombre'>('todos')
+  const [mostrarBusquedaComida, setMostrarBusquedaComida] = useState(false)
+  const [mostrarBusquedaNombre, setMostrarBusquedaNombre] = useState(false)
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -23,16 +28,10 @@ export default function VendedoresPage() {
   }, [loading, isAuthenticated, router])
 
   useEffect(() => {
-    if (isAuthenticated && user?.coordenadas) {
-      setLoadingVendedores(true)
-      getVendedores(user.coordenadas.latitud, user.coordenadas.longitud)
-        .then(setVendedores)
-        .catch(() => setError('No se pudieron cargar los vendedores.'))
-        .finally(() => setLoadingVendedores(false))
-    } else if (isAuthenticated && !user?.coordenadas) {
-      setError('No se encontraron las coordenadas de tu dirección. Por favor, establece tu dirección en tu perfil.')
+    if (isAuthenticated) {
+      cargarTodosLosVendedores()
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated])
 
   // Cargar carrito cuando se autentica el usuario
   useEffect(() => {
@@ -43,6 +42,66 @@ export default function VendedoresPage() {
 
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
+  }
+
+  const cargarTodosLosVendedores = async () => {
+    setLoadingVendedores(true)
+    setError(null)
+    try {
+      const vendedoresData = await getVendedores()
+      setVendedores(vendedoresData)
+      setModoLista('todos')
+    } catch (error) {
+      setError('No se pudieron cargar los vendedores.')
+    } finally {
+      setLoadingVendedores(false)
+    }
+  }
+
+  const buscarVendedores = async () => {
+    if (!busqueda.trim()) {
+      cargarTodosLosVendedores()
+      return
+    }
+
+    setLoadingVendedores(true)
+    setError(null)
+    try {
+      const vendedoresData = await buscarVendedoresPorComida(busqueda.trim())
+      setVendedores(vendedoresData)
+      setModoLista('busqueda')
+    } catch (error) {
+      setError('No se pudieron buscar los vendedores.')
+    } finally {
+      setLoadingVendedores(false)
+    }
+  }
+
+  const buscarVendedoresPorNombre = async () => {
+    if (!busquedaNombre.trim()) {
+      cargarTodosLosVendedores()
+      return
+    }
+
+    setLoadingVendedores(true)
+    setError(null)
+    try {
+      const vendedoresData = await buscarVendedoresPorNombreService(busquedaNombre.trim())
+      setVendedores(vendedoresData)
+      setModoLista('busqueda-nombre')
+    } catch (error) {
+      setError('No se pudieron buscar los vendedores por nombre.')
+    } finally {
+      setLoadingVendedores(false)
+    }
+  }
+
+  const limpiarBusqueda = () => {
+    setBusqueda('')
+    setBusquedaNombre('')
+    setMostrarBusquedaComida(false)
+    setMostrarBusquedaNombre(false)
+    cargarTodosLosVendedores()
   }
 
   // Loading state
@@ -109,6 +168,157 @@ export default function VendedoresPage() {
           </div>
         </div>
 
+        {/* Sección de Búsqueda */}
+        <div className="mb-8 space-y-4">
+          {/* Botones de tipo de búsqueda */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">¿Cómo quieres buscar?</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Búsqueda por comida */}
+              <button
+                onClick={() => {
+                  setMostrarBusquedaComida(!mostrarBusquedaComida)
+                  setMostrarBusquedaNombre(false)
+                  if (mostrarBusquedaComida) {
+                    setBusqueda('')
+                    if (modoLista === 'busqueda') cargarTodosLosVendedores()
+                  }
+                }}
+                className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${
+                  mostrarBusquedaComida 
+                    ? 'border-indigo-500 bg-indigo-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-orange-600 text-xl">🍕</span>
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-medium text-gray-900">¿Qué quieres pedir?</h4>
+                    <p className="text-sm text-gray-500">Busca por tipo de producto</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Búsqueda por nombre de local */}
+              <button
+                onClick={() => {
+                  setMostrarBusquedaNombre(!mostrarBusquedaNombre)
+                  setMostrarBusquedaComida(false)
+                  if (mostrarBusquedaNombre) {
+                    setBusquedaNombre('')
+                    if (modoLista === 'busqueda-nombre') cargarTodosLosVendedores()
+                  }
+                }}
+                className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${
+                  mostrarBusquedaNombre 
+                    ? 'border-purple-500 bg-purple-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-purple-600 text-xl">🏪</span>
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-medium text-gray-900">Buscar por local</h4>
+                    <p className="text-sm text-gray-500">Busca por nombre del restaurante</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Botón para limpiar búsqueda si está en modo búsqueda */}
+            {(modoLista === 'busqueda' || modoLista === 'busqueda-nombre') && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={limpiarBusqueda}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Ver todos los vendedores
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Campo de búsqueda por comida */}
+          {mostrarBusquedaComida && (
+            <div className="bg-white shadow rounded-lg p-6 border-l-4 border-orange-500">
+              <h4 className="text-lg font-medium text-gray-900 mb-4">Buscar por producto</h4>
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Ej: pizza, hamburguesa, sushi..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && buscarVendedores()}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+                <button
+                  onClick={buscarVendedores}
+                  disabled={loadingVendedores}
+                  className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {loadingVendedores ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                  <span>Buscar</span>
+                </button>
+              </div>
+              {modoLista === 'busqueda' && busqueda && (
+                <div className="mt-3 text-sm text-gray-600">
+                  Mostrando vendedores que ofrecen "{busqueda}" en su menú
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Campo de búsqueda por nombre de local */}
+          {mostrarBusquedaNombre && (
+            <div className="bg-white shadow rounded-lg p-6 border-l-4 border-purple-500">
+              <h4 className="text-lg font-medium text-gray-900 mb-4">Buscar por nombre de local</h4>
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Ej: McDonald's, Burger King, La Parolaccia..."
+                    value={busquedaNombre}
+                    onChange={(e) => setBusquedaNombre(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && buscarVendedoresPorNombre()}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                <button
+                  onClick={buscarVendedoresPorNombre}
+                  disabled={loadingVendedores}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {loadingVendedores ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                  <span>Buscar</span>
+                </button>
+              </div>
+              {modoLista === 'busqueda-nombre' && busquedaNombre && (
+                <div className="mt-3 text-sm text-gray-600">
+                  Mostrando coincidencia de vendedores con nombre: "{busquedaNombre}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -134,26 +344,46 @@ export default function VendedoresPage() {
           <div className="bg-white shadow rounded-lg p-12">
             <div className="text-center">
               <div className="text-6xl mb-4">
-                {!user?.coordenadas ? '📍' : '🍽️'}
+                {modoLista === 'busqueda' ? '🔍' : 
+                 modoLista === 'busqueda-nombre' ? '🏪' : 
+                 (!user?.coordenadas ? '📍' : '🍽️')}
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {!user?.coordenadas 
-                  ? 'Configura tu dirección' 
-                  : 'No hay vendedores disponibles'
+                {modoLista === 'busqueda' 
+                  ? 'No se encontraron vendedores' 
+                  : modoLista === 'busqueda-nombre'
+                  ? 'No se encontraron locales'
+                  : (!user?.coordenadas 
+                    ? 'Configura tu dirección' 
+                    : 'No hay vendedores disponibles'
+                  )
                 }
               </h3>
               <p className="text-gray-500 mb-6">
-                {!user?.coordenadas 
-                  ? 'Para ver los vendedores disponibles y calcular costos de envío, necesitas configurar tu dirección.' 
-                  : 'Por el momento no hay restaurantes disponibles en tu zona.'
+                {modoLista === 'busqueda' 
+                  ? `No hay vendedores que vendan "${busqueda}" en su menú. Intenta con otra búsqueda.`
+                  : modoLista === 'busqueda-nombre'
+                  ? `No hay locales que se llamen "${busquedaNombre}". Intenta con otro nombre.`
+                  : (!user?.coordenadas 
+                    ? 'Para ver los vendedores disponibles y calcular costos de envío, necesitas configurar tu dirección.' 
+                    : 'Por el momento no hay restaurantes disponibles en tu zona.'
+                  )
                 }
               </p>
               <button
                 onClick={() => router.push(!user?.coordenadas ? '/establecer-direccion' : '/')}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors mr-4"
               >
                 {!user?.coordenadas ? 'Configurar Dirección' : 'Volver al Dashboard'}
               </button>
+              {(modoLista === 'busqueda' || modoLista === 'busqueda-nombre') && (
+                <button
+                  onClick={limpiarBusqueda}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                >
+                  Ver todos los vendedores
+                </button>
+              )}
             </div>
           </div>
         ) : (
