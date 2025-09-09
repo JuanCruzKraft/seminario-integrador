@@ -217,9 +217,14 @@ export default function Home() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {loadingVendedores ? '...' : vendedores.length}
+                    {loadingVendedores ? '...' : vendedores.length} Vendedores
                   </p>
-                  <p className="text-sm text-gray-500">Vendedores disponibles</p>
+                  <p className="text-sm text-gray-500">Estan esperando tu pedido. ¡Exploralos!</p>
+                </div>
+                      <div className="ml-auto">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -256,8 +261,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{totalItemsCarrito}</p>
-                  <p className="text-sm text-gray-500">Items en carrito</p>
+                  <p className="text-2xl font-semibold text-gray-900">{totalItemsCarrito} Item(s) en carrito</p>
+                  <p className="text-sm text-gray-500">Visualizá tu carrito</p>
                 </div>
                 <div className="ml-auto">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

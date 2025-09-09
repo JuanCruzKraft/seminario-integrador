@@ -195,8 +195,8 @@ export default function VendedoresPage() {
                     <span className="text-orange-600 text-xl">🍕</span>
                   </div>
                   <div className="text-left">
-                    <h4 className="font-medium text-gray-900">¿Qué quieres comer?</h4>
-                    <p className="text-sm text-gray-500">Busca por tipo de comida</p>
+                    <h4 className="font-medium text-gray-900">¿Qué quieres pedir?</h4>
+                    <p className="text-sm text-gray-500">Busca por tipo de producto</p>
                   </div>
                 </div>
               </button>
@@ -245,7 +245,7 @@ export default function VendedoresPage() {
           {/* Campo de búsqueda por comida */}
           {mostrarBusquedaComida && (
             <div className="bg-white shadow rounded-lg p-6 border-l-4 border-orange-500">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Buscar por comida</h4>
+              <h4 className="text-lg font-medium text-gray-900 mb-4">Buscar por producto</h4>
               <div className="flex space-x-4">
                 <div className="flex-1">
                   <input
@@ -274,7 +274,7 @@ export default function VendedoresPage() {
               </div>
               {modoLista === 'busqueda' && busqueda && (
                 <div className="mt-3 text-sm text-gray-600">
-                  Mostrando vendedores que tienen "{busqueda}" en su menú
+                  Mostrando vendedores que ofrecen "{busqueda}" en su menú
                 </div>
               )}
             </div>

@@ -24,3 +24,34 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Estilos globales para inputs */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="number"], 
+input[type="search"], 
+input[type="tel"], 
+input[type="url"],
+textarea,
+select {
+  color: #111827 !important; /* text-gray-900 */
+}
+
+input[type="text"]::placeholder, 
+input[type="email"]::placeholder, 
+input[type="password"]::placeholder, 
+input[type="number"]::placeholder, 
+input[type="search"]::placeholder, 
+input[type="tel"]::placeholder, 
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* placeholder-gray-500 */
+}
+
+/* Mejorar contraste en dropdowns y elementos interactivos */
+.dropdown-item,
+.suggestion-item,
+button:not([class*="bg-"]):not([class*="text-"]) {
+  color: #111827 !important; /* text-gray-900 */
+}
