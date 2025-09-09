@@ -152,6 +152,67 @@ public class VendedorService {
 
         return response;
     }
+
+    public VisualizarVendedoresResponseDTO buscarVendedoresPorNombre(String nombreVendedor) {
+        VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
+        
+        try {
+            List<Vendedor> vendedores = vendedorRepository.findByNombreContaining(nombreVendedor);
+            if (vendedores.isEmpty()) {
+                response.resultado.status = 1;
+                response.resultado.mensaje = "No se encontraron vendedores.";
+                return response;
+            }
+
+            // Lista para almacenar los DTOs con sus distancias calculadas
+            List<VendedorDTO> vendedoresDTO = new ArrayList<>();
+
+            for (Vendedor vendedor : vendedores) {
+                VendedorDTO vendedorDTO = new VendedorDTO();
+                vendedorDTO.vendedorId = vendedor.getVendedorid();
+                vendedorDTO.nombre = vendedor.getNombre();
+                vendedorDTO.direccion = vendedor.getDireccion();
+                vendedorDTO.activo = vendedor.getActivo();
+                
+                // Calcular datos logísticos
+                try {
+                    // CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                    //     coordenadasCliente, 
+                    //     vendedor.getCoordenadas()
+                    // );
+                        CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                        clienteRepository.findById(sesion.getIdSesionActual()).get().getCoordenadas(), 
+                        vendedor.getCoordenadas() );
+                    vendedorDTO.datosLogisticos = datosLogisticos;
+                } catch (Exception e) {
+                    // En caso de error, crear datos logísticos vacíos (distancia muy alta para que quede al final)
+                    CalcularDatosLogisticosResponse datosVacios = new CalcularDatosLogisticosResponse();
+                    datosVacios.setDistancia(999999.0); // Distancia muy alta para ordenamiento
+                    datosVacios.setTiempoEstimado(0);
+                    datosVacios.setCostoEnvio(0.0);
+                    vendedorDTO.datosLogisticos = datosVacios;
+                }
+                
+                vendedoresDTO.add(vendedorDTO);
+            }
+
+            // Ordenar vendedores por distancia (del más cerca al más lejos)
+            vendedoresDTO.sort(Comparator.comparing(dto -> 
+                dto.datosLogisticos != null ? dto.datosLogisticos.getDistancia() : Double.MAX_VALUE
+            ));
+
+            // Agregar vendedores ordenados a la respuesta
+            response.vendedores.addAll(vendedoresDTO);
+            
+            response.resultado.status = 0;
+            response.resultado.mensaje = "Mostrando coincidencia de vendedores con nombre: " + nombreVendedor;
+        } catch (Exception e) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "Error al obtener los vendedores: " + e.getMessage();
+        }
+
+        return response;
+    }
     }
 
 

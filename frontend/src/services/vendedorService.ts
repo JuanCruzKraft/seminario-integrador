@@ -13,6 +13,17 @@ export const buscarVendedoresPorComida = async (nombreProducto: string): Promise
   return res.data.vendedores;
 };
 
+// TODO: Implementar en el backend
+// Endpoint sugerido: POST /vendedores/buscar-por-nombre
+// Request body: { nombreVendedor: string }
+// Response: mismo formato que los otros endpoints (VisualizarVendedoresResponseDTO)
+export const buscarVendedoresPorNombre = async (nombreVendedor: string): Promise<VendedorDTO[]> => {
+  const res = await axios.post('http://localhost:8080/vendedores/buscar-por-nombre', {
+    nombreVendedor
+  });
+  return res.data.vendedores;
+};
+
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '@/constants/api';
 import type { VisualizarVendedoresResponse } from '@/types/vendedor';
