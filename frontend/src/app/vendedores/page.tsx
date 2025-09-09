@@ -23,16 +23,14 @@ export default function VendedoresPage() {
   }, [loading, isAuthenticated, router])
 
   useEffect(() => {
-    if (isAuthenticated && user?.coordenadas) {
+    if (isAuthenticated) {
       setLoadingVendedores(true)
-      getVendedores(user.coordenadas.latitud, user.coordenadas.longitud)
+      getVendedores()
         .then(setVendedores)
         .catch(() => setError('No se pudieron cargar los vendedores.'))
         .finally(() => setLoadingVendedores(false))
-    } else if (isAuthenticated && !user?.coordenadas) {
-      setError('No se encontraron las coordenadas de tu dirección. Por favor, establece tu dirección en tu perfil.')
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated])
 
   // Cargar carrito cuando se autentica el usuario
   useEffect(() => {

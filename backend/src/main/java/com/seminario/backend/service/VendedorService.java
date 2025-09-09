@@ -11,20 +11,26 @@ import com.seminario.backend.dto.VendedorDTO;
 import com.seminario.backend.dto.response.VisualizarVendedoresResponseDTO;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.model.Vendedor;
+import com.seminario.backend.repository.ClienteRepository;
 import com.seminario.backend.repository.VendedorRepository;
+import com.seminario.backend.sesion.SesionMockeada;
 
 @Service
 public class VendedorService {
 
     private final VendedorRepository vendedorRepository;
     private final EnvioService envioService;
+    private final SesionMockeada sesion;
+    private final ClienteRepository clienteRepository;
 
-    public VendedorService(VendedorRepository vendedorRepository, EnvioService envioService) {
+    public VendedorService(VendedorRepository vendedorRepository, EnvioService envioService, SesionMockeada sesion, ClienteRepository clienteRepository) {
         this.vendedorRepository = vendedorRepository;
         this.envioService = envioService;
+        this.sesion = sesion;
+        this.clienteRepository = clienteRepository;
     }
 
-    public VisualizarVendedoresResponseDTO visualizarVendedores(Coordenada coordenadasCliente) {
+    public VisualizarVendedoresResponseDTO visualizarVendedores() {
         VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
         
         try {
@@ -47,8 +53,12 @@ public class VendedorService {
                 
                 // Calcular datos logísticos
                 try {
-                    CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
-                        coordenadasCliente, 
+                    // CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                    //     coordenadasCliente, 
+                    //     vendedor.getCoordenadas()
+                    // );
+                        CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                        clienteRepository.findById(sesion.getIdSesionActual()).get().getCoordenadas(), 
                         vendedor.getCoordenadas()
                     );
                     vendedorDTO.datosLogisticos = datosLogisticos;
@@ -82,6 +92,68 @@ public class VendedorService {
         return response;
     }
 
+    public VisualizarVendedoresResponseDTO visualizarVendedorQueVenden(String nombreProducto) {
+    VisualizarVendedoresResponseDTO response = new VisualizarVendedoresResponseDTO();
+        
+        try {
+            List<Vendedor> vendedores = vendedorRepository.findByItemsMenuNombreContaining(nombreProducto);
+            if (vendedores.isEmpty()) {
+                response.resultado.status = 1;
+                response.resultado.mensaje = "No se encontraron vendedores.";
+                return response;
+            }
+
+            // Lista para almacenar los DTOs con sus distancias calculadas
+            List<VendedorDTO> vendedoresDTO = new ArrayList<>();
+
+            for (Vendedor vendedor : vendedores) {
+                VendedorDTO vendedorDTO = new VendedorDTO();
+                vendedorDTO.vendedorId = vendedor.getVendedorid();
+                vendedorDTO.nombre = vendedor.getNombre();
+                vendedorDTO.direccion = vendedor.getDireccion();
+                vendedorDTO.activo = vendedor.getActivo();
+                
+                // Calcular datos logísticos
+                try {
+                    // CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                    //     coordenadasCliente, 
+                    //     vendedor.getCoordenadas()
+                    // );
+                        CalcularDatosLogisticosResponse datosLogisticos = envioService.calcularDatosLogisticos(
+                        clienteRepository.findById(sesion.getIdSesionActual()).get().getCoordenadas(), 
+                        vendedor.getCoordenadas() );
+                    vendedorDTO.datosLogisticos = datosLogisticos;
+                } catch (Exception e) {
+                    // En caso de error, crear datos logísticos vacíos (distancia muy alta para que quede al final)
+                    CalcularDatosLogisticosResponse datosVacios = new CalcularDatosLogisticosResponse();
+                    datosVacios.setDistancia(999999.0); // Distancia muy alta para ordenamiento
+                    datosVacios.setTiempoEstimado(0);
+                    datosVacios.setCostoEnvio(0.0);
+                    vendedorDTO.datosLogisticos = datosVacios;
+                }
+                
+                vendedoresDTO.add(vendedorDTO);
+            }
+
+            // Ordenar vendedores por distancia (del más cerca al más lejos)
+            vendedoresDTO.sort(Comparator.comparing(dto -> 
+                dto.datosLogisticos != null ? dto.datosLogisticos.getDistancia() : Double.MAX_VALUE
+            ));
+
+            // Agregar vendedores ordenados a la respuesta
+            response.vendedores.addAll(vendedoresDTO);
+            
+            response.resultado.status = 0;
+            response.resultado.mensaje = "Mostrando vendedores que ofrecen " + nombreProducto + " en su menu.";
+        } catch (Exception e) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "Error al obtener los vendedores: " + e.getMessage();
+        }
+
+        return response;
+    }
+    }
+
 
     
-}
+
