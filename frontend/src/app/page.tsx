@@ -53,6 +53,10 @@ export default function Home() {
     setDropdownOpen(false)
   }
 
+  const handleVendedores = () => {  
+    router.push('/vendedores')
+  }
+
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
   }
@@ -201,7 +205,11 @@ export default function Home() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+           <button
+            onClick={handleVendedores}
+             className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+          >
+          {/* <div className="bg-white overflow-hidden shadow rounded-lg"> */}
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -217,7 +225,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          {/* </div> */}
+          </button>
 
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-6">
