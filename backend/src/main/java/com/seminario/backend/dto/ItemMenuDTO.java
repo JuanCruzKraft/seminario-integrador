@@ -1,5 +1,7 @@
 package com.seminario.backend.dto;
 
+import java.util.List;
+
 public class ItemMenuDTO {
     public Long itemMenuId;
     public String nombre;
@@ -12,10 +14,11 @@ public class ItemMenuDTO {
     public Double tamanio; // Solo para bebidas
     public Double graduacionAlcoholica; // Solo para bebidas
     public float calorias; // Solo para comidas
+    public List<CategoriaDTO> categorias;
    // public VendedorResumenDTO vendedor; 
     // Constructor vacío
     public ItemMenuDTO() {
-        // No se requieren inicializaciones específicas
+        categorias = new java.util.ArrayList<>();
     }
     // Constructor con parámetros (opcional)
 

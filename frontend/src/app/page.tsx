@@ -29,19 +29,17 @@ export default function Home() {
     }
   }, [isAuthenticated, refreshCarrito])
 
-  // Cargar vendedores cuando el usuario esté autenticado y tenga coordenadas
+  // Cargar vendedores cuando el usuario esté autenticado
   useEffect(() => {
-    if (isAuthenticated && user?.coordenadas) {
+    if (isAuthenticated) {
       setLoadingVendedores(true)
       setVendedoresError(null)
-      getVendedores(user.coordenadas.latitud, user.coordenadas.longitud)
+      getVendedores()
         .then(setVendedores)
         .catch(() => setVendedoresError('No se pudieron cargar los vendedores.'))
         .finally(() => setLoadingVendedores(false))
-    } else if (isAuthenticated && !user?.coordenadas) {
-      setVendedoresError('Para ver los vendedores disponibles, necesitas configurar tu dirección.')
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated])
 
   const handleLogout = () => {
     logout()
@@ -51,6 +49,10 @@ export default function Home() {
   const handleProfile = () => {
     router.push('/perfil')
     setDropdownOpen(false)
+  }
+
+  const handleVendedores = () => {  
+    router.push('/vendedores')
   }
 
   const handleVerMenu = (vendedor: VendedorDTO) => {
@@ -201,7 +203,11 @@ export default function Home() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+           <button
+            onClick={handleVendedores}
+             className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+          >
+          {/* <div className="bg-white overflow-hidden shadow rounded-lg"> */}
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -211,13 +217,19 @@ export default function Home() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {loadingVendedores ? '...' : vendedores.length}
+                    {loadingVendedores ? '...' : vendedores.length} Vendedores
                   </p>
-                  <p className="text-sm text-gray-500">Vendedores disponibles</p>
+                  <p className="text-sm text-gray-500">Estan esperando tu pedido. ¡Exploralos!</p>
+                </div>
+                      <div className="ml-auto">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </div>
             </div>
-          </div>
+          {/* </div> */}
+          </button>
 
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-6">
@@ -249,8 +261,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-semibold text-gray-900">{totalItemsCarrito}</p>
-                  <p className="text-sm text-gray-500">Items en carrito</p>
+                  <p className="text-2xl font-semibold text-gray-900">{totalItemsCarrito} Item(s) en carrito</p>
+                  <p className="text-sm text-gray-500">Visualizá tu carrito</p>
                 </div>
                 <div className="ml-auto">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,14 +296,6 @@ export default function Home() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
                 {vendedoresError}
-                {!user?.coordenadas && (
-                  <button
-                    onClick={() => router.push('/establecer-direccion')}
-                    className="ml-3 text-red-800 underline hover:text-red-900"
-                  >
-                    Configurar ahora
-                  </button>
-                )}
               </div>
             </div>
           )}

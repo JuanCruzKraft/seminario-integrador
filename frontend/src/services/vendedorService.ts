@@ -1,15 +1,25 @@
 import axios from 'axios';
 import { VendedorDTO } from '../types/vendedor';
 
-export const getVendedores = async (
-  clienteLatitud: number, 
-  clienteLongitud: number
-): Promise<VendedorDTO[]> => {
-  const res = await axios.get('http://localhost:8080/vendedores/listar', {
-    params: {
-      clienteLatitud,
-      clienteLongitud
-    }
+export const getVendedores = async (): Promise<VendedorDTO[]> => {
+  const res = await axios.get('http://localhost:8080/vendedores/listar');
+  return res.data.vendedores;
+};
+
+export const buscarVendedoresPorComida = async (nombreProducto: string): Promise<VendedorDTO[]> => {
+  const res = await axios.post('http://localhost:8080/vendedores/listar-menu-contiene', {
+    nombreProducto
+  });
+  return res.data.vendedores;
+};
+
+// TODO: Implementar en el backend
+// Endpoint sugerido: POST /vendedores/buscar-por-nombre
+// Request body: { nombreVendedor: string }
+// Response: mismo formato que los otros endpoints (VisualizarVendedoresResponseDTO)
+export const buscarVendedoresPorNombre = async (nombreVendedor: string): Promise<VendedorDTO[]> => {
+  const res = await axios.post('http://localhost:8080/vendedores/buscar-por-nombre', {
+    nombreVendedor
   });
   return res.data.vendedores;
 };
@@ -19,12 +29,7 @@ import { API_ENDPOINTS } from '@/constants/api';
 import type { VisualizarVendedoresResponse } from '@/types/vendedor';
 
 export class VendedorService {
-  static async listarVendedores(
-    clienteLatitud: number, 
-    clienteLongitud: number
-  ): Promise<VisualizarVendedoresResponse> {
-    return ApiService.get<VisualizarVendedoresResponse>(
-      `${API_ENDPOINTS.VENDEDORES_LISTAR}?clienteLatitud=${clienteLatitud}&clienteLongitud=${clienteLongitud}`
-    );
+  static async listarVendedores(): Promise<VisualizarVendedoresResponse> {
+    return ApiService.get<VisualizarVendedoresResponse>(API_ENDPOINTS.VENDEDORES_LISTAR);
   }
 }
