@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 //@Controller
 @RequestMapping("/vendedores")
-@CrossOrigin(origins = "http://localhost:3000")
 public class VendedorController {
     private final VendedorService vendedorService;
 

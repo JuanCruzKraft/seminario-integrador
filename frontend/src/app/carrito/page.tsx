@@ -57,27 +57,8 @@ export default function CarritoPage() {
   }
 
   const handleConfirmarCarrito = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres confirmar el pedido?')) {
-      return
-    }
-
-    setConfirmandoCarrito(true)
-    setError(null)
-
-    try {
-      // TODO: Implementar endpoint de confirmar carrito
-      // const response = await confirmarCarrito()
-      
-      // Por ahora simulamos éxito
-      setSuccess('¡Pedido confirmado exitosamente!')
-      setTimeout(() => {
-        router.push('/pedidos') // o donde corresponda después de confirmar
-      }, 2000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al confirmar el carrito')
-    } finally {
-      setConfirmandoCarrito(false)
-    }
+    // Redirect to payment page instead of processing immediately
+    router.push('/pago')
   }
 
   const handleModificarCantidad = async (item: ItemPedidoDTO, nuevaCantidad: number) => {
@@ -361,22 +342,12 @@ export default function CarritoPage() {
                 <div className="mt-6 space-y-3">
                   <button
                     onClick={handleConfirmarCarrito}
-                    disabled={confirmandoCarrito}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center"
                   >
-                    {confirmandoCarrito ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Confirmando...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Confirmar Pedido
-                      </>
-                    )}
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Proceder al Pago
                   </button>
                   
                   <button

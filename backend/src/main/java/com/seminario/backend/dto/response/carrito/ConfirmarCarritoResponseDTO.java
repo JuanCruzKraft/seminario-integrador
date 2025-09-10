@@ -8,12 +8,17 @@ import com.seminario.backend.enums.MetodoPago;
 
 public class ConfirmarCarritoResponseDTO {
      private Double total;
+     private Double subtotal;
+     private Double recargo;
      private List<ItemPedidoDTO> items;
      private List<MetodoPago> metodosDisponibles;
+     private MetodoPago metodoPago; // Método de pago utilizado
      private Long vendedorId;
      private String vendedorNombre;
      private String vendedorCuit;
      private String vendedorCbu;
+     private Integer tiempoEnvio; // en minutos
+     private Long pedidoId; // ID del pedido creado
      public ResultadoOperacion resultado = new ResultadoOperacion();
      
      public ConfirmarCarritoResponseDTO() {
@@ -74,5 +79,45 @@ public class ConfirmarCarritoResponseDTO {
      
      public void setVendedorCbu(String vendedorCbu) {
          this.vendedorCbu = vendedorCbu;
+     }
+
+     public Double getSubtotal() {
+         return subtotal;
+     }
+
+     public void setSubtotal(Double subtotal) {
+         this.subtotal = subtotal;
+     }
+
+     public Double getRecargo() {
+         return recargo;
+     }
+
+     public void setRecargo(Double recargo) {
+         this.recargo = recargo;
+     }
+
+     public Integer getTiempoEnvio() {
+         return tiempoEnvio;
+     }
+
+     public void setTiempoEnvio(Integer tiempoEnvio) {
+         this.tiempoEnvio = tiempoEnvio;
+     }
+
+     public Long getPedidoId() {
+         return pedidoId;
+     }
+
+     public void setPedidoId(Long pedidoId) {
+         this.pedidoId = pedidoId;
+     }
+
+     public MetodoPago getMetodoPago() {
+         return metodoPago;
+     }
+
+     public void setMetodoPago(MetodoPago metodoPago) {
+         this.metodoPago = metodoPago;
      }
 }

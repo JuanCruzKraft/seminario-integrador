@@ -14,7 +14,6 @@ import com.seminario.backend.service.ItemMenuService;
 
 @RestController
 @RequestMapping("/itemMenu")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ItemMenuController {
     private final ItemMenuService itemMenuService;
 

@@ -1,8 +1,12 @@
 package com.seminario.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.seminario.backend.dto.ItemPedidoDTO;
 import com.seminario.backend.dto.request.carrito.ConfirmarCarritoRequestDTO;
@@ -17,10 +21,6 @@ import com.seminario.backend.repository.ItemPedidoRepository;
 import com.seminario.backend.repository.PagoRepository;
 import com.seminario.backend.repository.PedidoRepository;
 import com.seminario.backend.sesion.SesionMockeada;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Service
 public class PagoService {
@@ -39,6 +39,7 @@ public class PagoService {
         this.pedidoService = pedidoService;
     }
     
+    @Transactional
     public ConfirmarCarritoResponseDTO procesarPago(ConfirmarCarritoRequestDTO request) {
         ConfirmarCarritoResponseDTO response = new ConfirmarCarritoResponseDTO();
         
@@ -105,6 +106,7 @@ public class PagoService {
             // Guardar los cambios en el pedido
             Pedido pedidoGuardado = pedidoRepository.save(carrito);
             System.out.println("Pedido guardado con estado: " + pedidoGuardado.getEstado() + " e ID: " + pedidoGuardado.getPedidoid());
+            System.out.println("Fecha de confirmación: " + pedidoGuardado.getFechaConfirmacion());
             
             // Configurar la respuesta
             response.setTotal(precioFinal);
@@ -113,6 +115,7 @@ public class PagoService {
             response.setVendedorNombre(carrito.getVendedor().getNombre());
             response.setVendedorCuit(carrito.getVendedor().getCuit());
             response.setVendedorCbu(carrito.getVendedor().getCbu());
+            response.setPedidoId(pedidoGuardado.getPedidoid()); // Agregar ID del pedido
             response.resultado.setStatus(0);
             response.resultado.setMensaje("Pago procesado exitosamente. Pedido confirmado.");
             
@@ -141,17 +144,21 @@ public class PagoService {
             
             // Calcular el precio final según el método de pago (solo para mostrar en la respuesta)
             double subtotalTotal = carrito.getSubTotal_Total() != null ? carrito.getSubTotal_Total() : 0.0;
+            double recargo = 0.0;
             double precioFinal;
             
             if (metodoPago == MetodoPago.TARJETA_CREDITO) {
                 // Tarjeta de crédito: subtotal + 10%
-                precioFinal = subtotalTotal * 1.10;
+                recargo = subtotalTotal * 0.10;
+                precioFinal = subtotalTotal + recargo;
             } else {
                 // Débito y transferencia: sin recargo
                 precioFinal = subtotalTotal;
             }
             
             // Configurar la respuesta
+            response.setSubtotal(subtotalTotal);
+            response.setRecargo(recargo);
             response.setTotal(precioFinal);
             response.setItems(convertirItemsADTO(carrito));
             response.setVendedorId(carrito.getVendedor().getVendedorid());
@@ -313,5 +320,107 @@ public class PagoService {
         }
         
         return itemsDTO;
+    }
+    
+    public ConfirmarCarritoResponseDTO obtenerResumenPago(Long pedidoId) {
+        ConfirmarCarritoResponseDTO response = new ConfirmarCarritoResponseDTO();
+        
+        try {
+            // Buscar el pedido por ID
+            Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+            
+            if (pedido == null) {
+                response.resultado.setStatus(404);
+                response.resultado.setMensaje("Pedido no encontrado");
+                return response;
+            }
+            
+            // Verificar que el pedido pertenezca al cliente actual
+            if (!pedido.getCliente().getClienteid().equals(sesion.getIdSesionActual())) {
+                response.resultado.setStatus(403);
+                response.resultado.setMensaje("No tienes permisos para ver este pedido");
+                return response;
+            }
+            
+            // Llenar la respuesta con los datos del pedido
+            response.setVendedorId(pedido.getVendedor().getVendedorid());
+            response.setVendedorNombre(pedido.getVendedor().getNombre());
+            response.setVendedorCuit(pedido.getVendedor().getCuit());
+            response.setVendedorCbu(pedido.getVendedor().getCbu());
+            
+            // Obtener items del pedido
+            response.setItems(convertirItemsADTO(pedido));
+            
+            // Calcular subtotal
+            double subtotal = response.getItems().stream().mapToDouble(item -> item.subtotal).sum();
+            response.setSubtotal(subtotal);
+            
+            // Obtener información del pago para calcular recargo y método de pago
+            List<Pago> pagos = pagoRepository.findByPedidoPedidoid(pedido.getPedidoid());
+            if (!pagos.isEmpty()) {
+                MetodoPago metodoPago = pagos.get(0).getMetodoPago();
+                response.setMetodoPago(metodoPago);
+                
+                if (metodoPago == MetodoPago.TARJETA_CREDITO) {
+                    response.setRecargo(subtotal * 0.10); // 10% de recargo
+                } else {
+                    response.setRecargo(0.0);
+                }
+            } else {
+                response.setRecargo(0.0);
+            }
+            
+            response.setTotal(subtotal + response.getRecargo());
+            
+            // Usar el tiempo de envío del pedido (ya calculado en CarritoService)
+            Integer tiempoEnvio = pedido.getTiempo_envio();
+            response.setTiempoEnvio(tiempoEnvio != null ? tiempoEnvio : 30); // Por defecto 30 minutos
+            
+            response.setPedidoId(pedido.getPedidoid());
+            
+            response.resultado.setStatus(200);
+            response.resultado.setMensaje("Resumen obtenido correctamente");
+            
+        } catch (Exception e) {
+            response.resultado.setStatus(500);
+            response.resultado.setMensaje("Error al obtener el resumen: " + e.getMessage());
+        }
+        
+        return response;
+    }
+    
+    public byte[] generarPDF(Long pedidoId) {
+        try {
+            // Por ahora, genero un PDF simple como placeholder
+            // Aquí se podría usar una librería como iText o similar
+            String contenido = "RESUMEN DE PEDIDO #" + pedidoId + "\n\n";
+            
+            Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+            if (pedido != null) {
+                contenido += "Vendedor: " + pedido.getVendedor().getNombre() + "\n";
+                contenido += "Cliente: " + pedido.getCliente().getNombre() + "\n";
+                contenido += "Fecha: " + pedido.getFechaConfirmacion() + "\n\n";
+                
+                contenido += "ITEMS:\n";
+                Set<ItemPedido> items = itemPedidoRepository.findByPedido(pedido);
+                for (ItemPedido item : items) {
+                    contenido += item.getCantidad() + "x " + item.getItemMenu().getNombre() + 
+                               " - $" + item.getSubtotal() + "\n";
+                }
+                
+                List<Pago> pagos = pagoRepository.findByPedidoPedidoid(pedido.getPedidoid());
+                if (!pagos.isEmpty()) {
+                    Pago pago = pagos.get(0);
+                    contenido += "\nMétodo de pago: " + pago.getMetodoPago() + "\n";
+                    contenido += "Total: $" + pago.getMonto() + "\n";
+                }
+            }
+            
+            // Por simplicidad, devuelvo el contenido como texto (debería ser PDF real)
+            return contenido.getBytes("UTF-8");
+            
+        } catch (Exception e) {
+            return ("Error generando PDF: " + e.getMessage()).getBytes();
+        }
     }
 }
