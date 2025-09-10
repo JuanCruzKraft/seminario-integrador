@@ -29,12 +29,14 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final ItemPedidoRepository itemPedidoRepository;
     private final SesionMockeada sesion;
-    
-    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, ItemPedidoRepository itemPedidoRepository, SesionMockeada sesion) {
+    private final PedidoService pedidoService;
+
+    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, ItemPedidoRepository itemPedidoRepository, SesionMockeada sesion, PedidoService pedidoService) {
         this.pedidoRepository = pedidoRepository;
         this.pagoRepository = pagoRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.sesion = sesion;
+        this.pedidoService = pedidoService;
     }
     
     public ConfirmarCarritoResponseDTO procesarPago(ConfirmarCarritoRequestDTO request) {
@@ -114,6 +116,8 @@ public class PagoService {
             response.resultado.setStatus(0);
             response.resultado.setMensaje("Pago procesado exitosamente. Pedido confirmado.");
             
+            pedidoService.programarTransicionesPedido(pedidoGuardado.getPedidoid());
+
         } catch (Exception e) {
             response.resultado.setStatus(500);
             response.resultado.setMensaje("Error interno del servidor: " + e.getMessage());
