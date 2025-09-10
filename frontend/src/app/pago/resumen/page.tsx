@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { API_CONFIG } from "@/constants/api";
+import { usePedidoTracking } from "@/hooks/usePedidoTracking";
 
 interface PedidoItem {
   itemPedidoId: number;
@@ -40,6 +41,9 @@ export default function PagoResumenPage() {
 
   // Suponemos que el id del pedido viene por query param
   const pedidoId = searchParams.get("pedidoId");
+  
+  // Hook para seguimiento del pedido
+  const { estadoPedido, loading: trackingLoading } = usePedidoTracking(pedidoId ? parseInt(pedidoId) : null);
 
   useEffect(() => {
     if (!pedidoId) {
@@ -139,10 +143,64 @@ export default function PagoResumenPage() {
           </button>
         </div>
       </div>
-      {/* Mensaje de preparación y tiempo de envío */}
-      <div className="mt-8 text-center text-lg font-medium text-gray-900">
-        Tu pedido está en preparación, llega en <span className="text-blue-600 font-bold">{resumen.tiempoEnvio} minutos</span>.
-      </div>
+      
+      {/* Tracking del pedido */}
+      {estadoPedido && (
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6 w-full max-w-3xl">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Estado del Pedido</h3>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-medium text-gray-900">{estadoPedido.estadoTexto}</span>
+              <span className="text-sm text-gray-700">{Math.round(estadoPedido.progreso)}% completado</span>
+            </div>
+            
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${estadoPedido.progreso}%` }}
+              ></div>
+            </div>
+            
+            {estadoPedido.tiempoRestante > 0 && (
+              <p className="text-center text-gray-900">
+                Tiempo estimado restante: <span className="font-bold text-blue-600">{estadoPedido.tiempoRestante} minutos</span>
+              </p>
+            )}
+            
+            {estadoPedido.siguienteEstado && estadoPedido.estado !== 'ENTREGADO' && (
+              <p className="text-center text-sm text-gray-700">
+                Próximo estado: {estadoPedido.siguienteEstado}
+              </p>
+            )}
+
+            {/* Indicadores visuales de estado */}
+            <div className="flex justify-between items-center mt-6">
+              <div className={`flex flex-col items-center ${estadoPedido.estado === 'CONFIRMADO' || estadoPedido.estado === 'EN_ENVIO' || estadoPedido.estado === 'ENTREGADO' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mb-2 ${estadoPedido.estado === 'CONFIRMADO' || estadoPedido.estado === 'EN_ENVIO' || estadoPedido.estado === 'ENTREGADO' ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                <span className="text-xs font-medium">Confirmado</span>
+              </div>
+              
+              <div className={`flex flex-col items-center ${estadoPedido.estado === 'EN_ENVIO' || estadoPedido.estado === 'ENTREGADO' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mb-2 ${estadoPedido.estado === 'EN_ENVIO' || estadoPedido.estado === 'ENTREGADO' ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                <span className="text-xs font-medium">En Camino</span>
+              </div>
+              
+              <div className={`flex flex-col items-center ${estadoPedido.estado === 'ENTREGADO' ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mb-2 ${estadoPedido.estado === 'ENTREGADO' ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+                <span className="text-xs font-medium">Entregado</span>
+              </div>
+            </div>
+            
+            {trackingLoading && (
+              <div className="text-center text-sm text-gray-500">
+                Actualizando estado...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
