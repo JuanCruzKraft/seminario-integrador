@@ -28,6 +28,12 @@ public class Vendedor{
     @Column(nullable = false)
     private Boolean activo;
 
+    @Column
+    private String cuit;
+
+    @Column
+    private String cbu;
+
     @OneToMany(mappedBy = "vendedor") //, cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
     private List<Pedido> pedidos;
     
@@ -43,6 +49,15 @@ public class Vendedor{
         this.nombre = nombre;
         this.direccion = direccion;
         this.coordenadas = coordenadas;
+        this.activo = true; // Por defecto activo
+    }
+
+    public Vendedor(String nombre, String direccion, String cuit, Coordenada coordenadas) {
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.cuit = cuit;
+        this.coordenadas = coordenadas;
+        this.activo = true; // Por defecto activo
     }
 
 }

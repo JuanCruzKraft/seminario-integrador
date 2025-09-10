@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.ItemPedidoDTO;
 import com.seminario.backend.dto.request.carrito.AgregarItemRequestDTO;
+import com.seminario.backend.dto.request.carrito.ConfirmarCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.CrearCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.EliminarCarritoRequestDTO;
 import com.seminario.backend.dto.request.carrito.EliminarItemRequestDTO;
 import com.seminario.backend.dto.request.carrito.ModificarCantidadRequestDTO;
 import com.seminario.backend.dto.response.carrito.AgregarItemResponseDTO;
+import com.seminario.backend.dto.response.carrito.ConfirmarCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.CrearCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarItemResponseDTO;
@@ -19,6 +21,7 @@ import com.seminario.backend.dto.response.carrito.ModificarCantidadResponseDTO;
 import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
 import com.seminario.backend.dto.response.cliente.EstablecerDireccionClienteResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
+import com.seminario.backend.enums.MetodoPago;
 import com.seminario.backend.model.Cliente;
 import com.seminario.backend.model.ItemMenu;
 import com.seminario.backend.model.ItemPedido;
@@ -79,11 +82,13 @@ public class CarritoService {
             ItemPedido nuevoItemPedido = new ItemPedido(item, request.cantidad);
             nuevoItemPedido.setPedido(carrito);
             itemPedidoRepository.save(nuevoItemPedido);
+            carrito.setSubTotal_Total(carrito.getSubTotal_Total() + (item.getPrecio() * request.cantidad));
             pedidoRepository.save(carrito); // Actualizar el carrito
             response.resultado.setMensaje("Item agregado al carrito");
             response.resultado.setStatus(0); 
             item.setStock(item.getStock() - request.cantidad);
             itemMenuRepository.save(item);
+        
             
             return response;
         }
@@ -160,7 +165,6 @@ public class CarritoService {
     }
 
     public VisualizarCarritoResponseDTO visualizarCarrito() {
-
         VisualizarCarritoResponseDTO response = new VisualizarCarritoResponseDTO();
                 
         if(sesion.getIdSesionActual() == null) {
@@ -171,6 +175,7 @@ public class CarritoService {
 
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
         if (carrito != null) {
+            Pedido pedido = new Pedido();
             Set<ItemPedido> itemsPedido = itemPedidoRepository.findByPedido(carrito);
             Double subtotalItemsPedido = 0.0;
             response.items = new ArrayList<>();
@@ -195,23 +200,28 @@ public class CarritoService {
             response.resultado.setStatus(0);
             response.subtotalTotal = subtotalItemsPedido + response.costoEnvio;
             response.direccionEntrega = carrito.getCliente().getDireccion();
+            pedido.setSubTotal_Total= response.subtotalTotal;
 
         } else {
             response.resultado.setMensaje("Carrito no encontrado");
             response.resultado.setStatus(1);
         }
         return response;
-
     }
+    
+
+    //Persistir datos logistico , que llame a envie service y que actualice el carrito con esos datos.
 
     public ModificarCantidadResponseDTO modificarCantidadItem(ModificarCantidadRequestDTO request) {
         ModificarCantidadResponseDTO response = new ModificarCantidadResponseDTO();
+
                 
         if(sesion.getIdSesionActual() == null) {
             response.resultado.setStatus(401);
             response.resultado.setMensaje("No hay un cliente autenticado.");
             return response;
         }
+
 
         try {
             ItemPedido itemPedido = itemPedidoRepository.findById(request.itemPedidoId).orElse(null);
@@ -229,6 +239,7 @@ public class CarritoService {
             }
 
             ItemMenu itemMenu = itemMenuRepository.findById(request.itemMenuId).orElse(null);
+            Pedido carrito = pedidoRepository.findById(itemPedido.getPedido().getPedidoid()).orElse(null);
             if (itemMenu == null) {
                 response.resultado.setStatus(404);
                 response.resultado.setMensaje("Item del menú no encontrado");
@@ -247,6 +258,8 @@ public class CarritoService {
 
             // Si la nueva cantidad es 0 o menor, eliminar el item
             if (request.nuevaCantidad <= 0) {
+                carrito.setSubTotal_Total(carrito.getSubTotal_Total() - (itemPedido.getCantidad() * itemPedido.getItemMenu().getPrecio()));
+                pedidoRepository.save(carrito);
                 eliminarItem(itemPedido.getItempedidoid());
                 response.resultado.setStatus(0);
                 response.resultado.setMensaje("Item eliminado del carrito");
@@ -260,6 +273,8 @@ public class CarritoService {
             // Actualizar cantidad del item pedido
             itemPedido.setCantidad(request.nuevaCantidad);
             itemPedidoRepository.save(itemPedido);
+            carrito.setSubTotal_Total(carrito.getSubTotal_Total() + (diferenciaStock * itemPedido.getItemMenu().getPrecio()));
+            pedidoRepository.save(carrito);
 
             response.resultado.setStatus(0);
             response.resultado.setMensaje("Cantidad modificada exitosamente");
@@ -350,9 +365,13 @@ public class CarritoService {
         nuevoCarrito.setCliente(clienteRepository.findById(clienteId).get());
         nuevoCarrito.setVendedor(vendedorRepository.findById(vendedorId).get());
         nuevoCarrito.setEstado(EstadoPedido.EN_CARRITO);
-        return pedidoRepository.save(nuevoCarrito);
+        nuevoCarrito.setDistanciaEnvio(envioService.calcularDistancia(nuevoCarrito.getCliente().getCoordenadas(), nuevoCarrito.getVendedor().getCoordenadas()));
+        nuevoCarrito.setTiempo_envio(envioService.calcularTiempoEnvio(nuevoCarrito.getDistanciaEnvio()));
+        nuevoCarrito.setCostoEnvio(envioService.calcularCostoEnvio(nuevoCarrito.getDistanciaEnvio()));
+        nuevoCarrito.setSubTotal_Total(nuevoCarrito.getCostoEnvio());
+        Pedido carritoGuardado = pedidoRepository.save(nuevoCarrito);
+        //System.out.println("Carrito guardado con estado: " + carritoGuardado.getEstado() + " e ID: " + carritoGuardado.getPedidoid());
         
+        return carritoGuardado;
     }
-
-
 }
