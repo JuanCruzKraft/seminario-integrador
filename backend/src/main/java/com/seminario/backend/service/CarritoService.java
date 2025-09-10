@@ -19,6 +19,7 @@ import com.seminario.backend.dto.response.carrito.EliminarCarritoResponseDTO;
 import com.seminario.backend.dto.response.carrito.EliminarItemResponseDTO;
 import com.seminario.backend.dto.response.carrito.ModificarCantidadResponseDTO;
 import com.seminario.backend.dto.response.carrito.VisualizarCarritoResponseDTO;
+import com.seminario.backend.dto.response.cliente.EstablecerDireccionClienteResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.enums.MetodoPago;
 import com.seminario.backend.model.Cliente;
@@ -60,6 +61,13 @@ public class CarritoService {
 
     public AgregarItemResponseDTO agregarItem(AgregarItemRequestDTO request) {
         AgregarItemResponseDTO response = new AgregarItemResponseDTO();
+        
+    if(sesion.getIdSesionActual() == null) {
+        response.resultado.setStatus(401);
+        response.resultado.setMensaje("No hay un cliente autenticado.");
+        return response;
+    }
+
         ItemMenu item = itemMenuRepository.findById(request.itemMenuId).orElse(null);
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(request.clienteid, EstadoPedido.EN_CARRITO);
         if(request.cantidad > item.getStock() ) {
@@ -129,6 +137,12 @@ public class CarritoService {
     public EliminarCarritoResponseDTO eliminarCarrito() {
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
         EliminarCarritoResponseDTO response = new EliminarCarritoResponseDTO();
+        
+    if(sesion.getIdSesionActual() == null) {
+        response.resultado.setStatus(401);
+        response.resultado.setMensaje("No hay un cliente autenticado.");
+        return response;
+    }
 
         if (carrito != null) {
             //este for no hace falta porq los items se eliminan en cascada
@@ -152,6 +166,13 @@ public class CarritoService {
 
     public VisualizarCarritoResponseDTO visualizarCarrito() {
         VisualizarCarritoResponseDTO response = new VisualizarCarritoResponseDTO();
+                
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
         Pedido carrito = pedidoRepository.findByClienteClienteidAndEstado(sesion.getIdSesionActual(), EstadoPedido.EN_CARRITO);
         if (carrito != null) {
             Pedido pedido = new Pedido();
@@ -193,6 +214,14 @@ public class CarritoService {
 
     public ModificarCantidadResponseDTO modificarCantidadItem(ModificarCantidadRequestDTO request) {
         ModificarCantidadResponseDTO response = new ModificarCantidadResponseDTO();
+
+                
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
 
         try {
             ItemPedido itemPedido = itemPedidoRepository.findById(request.itemPedidoId).orElse(null);
@@ -277,7 +306,13 @@ public class CarritoService {
 
     public EliminarItemResponseDTO eliminarItem(EliminarItemRequestDTO request) {
         EliminarItemResponseDTO response = new EliminarItemResponseDTO();
-        
+                
+        if(sesion.getIdSesionActual() == null) {
+            response.resultado.setStatus(401);
+            response.resultado.setMensaje("No hay un cliente autenticado.");
+            return response;
+        }
+
         try {
             ItemPedido itemPedido = itemPedidoRepository.findById(request.itemPedidoId).orElse(null);
             if (itemPedido == null) {

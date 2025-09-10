@@ -116,7 +116,7 @@ export default function AddressAutocomplete({
             <button
               key={suggestion.properties.place_id || index}
               type="button"
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0 text-gray-900"
               onClick={() => handleSuggestionClick(suggestion)}
             >
               <div className="flex items-start">

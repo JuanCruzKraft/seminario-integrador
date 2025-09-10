@@ -72,10 +72,6 @@ public class ClienteController {
     }
     @PostMapping("/eliminar")
     public ResponseEntity<String> eliminarCuenta() {
-        Long idUsuarioActual = sesion.getIdSesionActual();
-        if (idUsuarioActual == null) {
-            return ResponseEntity.status(401).body("Ningún usuario está logueado");
-        }
         ResponseEntity<String> eliminado = clienteService.eliminarCuenta();
         sesion.cerrarSesion();
         return eliminado;
