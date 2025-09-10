@@ -1,25 +1,29 @@
 package com.seminario.backend.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
 
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.seminario.backend.dto.response.EstadoPedidoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.model.Pedido;
 import com.seminario.backend.repository.PedidoRepository;
+import com.seminario.backend.sesion.SesionMockeada;
 
 @Service
 public class PedidoService {
     
     private final PedidoRepository pedidoRepository;
+    private final SesionMockeada sesion;
     private final Random random = new Random();
     
-    public PedidoService(PedidoRepository pedidoRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, SesionMockeada sesion) {
         this.pedidoRepository = pedidoRepository;
+        this.sesion = sesion;
     }
     
     /**
@@ -150,6 +154,98 @@ public class PedidoService {
      */
     public Pedido obtenerPedido(Long pedidoId) {
         return pedidoRepository.findById(pedidoId).orElse(null);
+    }
+
+    /**
+     * Obtiene el estado detallado de un pedido para el frontend
+     */
+    public EstadoPedidoResponseDTO obtenerEstadoPedido(Long pedidoId) {
+        EstadoPedidoResponseDTO response = new EstadoPedidoResponseDTO();
+        
+        try {
+            Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+            
+            if (pedido == null) {
+                response.resultado.status = 1;
+                response.resultado.mensaje = "Pedido no encontrado";
+                return response;
+            }
+
+            // Verificar que el pedido pertenezca al cliente actual (opcional, depende de tu sesión)
+            // if (!pedido.getCliente().getClienteid().equals(sesion.getIdSesionActual())) {
+            //     response.resultado.status = 1;
+            //     response.resultado.mensaje = "No tienes permisos para ver este pedido";
+            //     return response;
+            // }
+
+            response.setPedidoId(pedidoId);
+            response.setEstado(pedido.getEstado());
+            response.setEstadoTexto(obtenerTextoEstado(pedido.getEstado()));
+            
+            // Calcular progreso y tiempo restante
+            calcularProgresoPedido(pedido, response);
+            
+            response.resultado.status = 0;
+            response.resultado.mensaje = "Estado obtenido correctamente";
+            
+        } catch (Exception e) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "Error al obtener estado: " + e.getMessage();
+        }
+        
+        return response;
+    }
+
+    private void calcularProgresoPedido(Pedido pedido, EstadoPedidoResponseDTO response) {
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime fechaConfirmacion = pedido.getFechaConfirmacion();
+        
+        if (fechaConfirmacion == null) {
+            response.setProgreso(0.0);
+            response.setTiempoRestante(0);
+            response.setTiempoTotal(0);
+            return;
+        }
+
+        // Tiempos en minutos para cada estado
+        int tiempoTotal = pedido.getTiempo_envio() != null ? pedido.getTiempo_envio() : 30;
+        long minutosTranscurridos = ChronoUnit.MINUTES.between(fechaConfirmacion, ahora);
+        
+        switch (pedido.getEstado()) {
+            case CONFIRMADO:
+                response.setProgreso(0.0);
+                response.setTiempoRestante(tiempoTotal);
+                response.setSiguienteEstado("En Envío");
+                break;
+            case EN_ENVIO:
+                double progresoEnvio = Math.min((double) minutosTranscurridos / tiempoTotal * 50.0, 50.0);
+                response.setProgreso(progresoEnvio);
+                response.setTiempoRestante(Math.max(0, tiempoTotal - (int) minutosTranscurridos));
+                response.setSiguienteEstado("Entregado");
+                break;
+            case ENTREGADO:
+                response.setProgreso(100.0);
+                response.setTiempoRestante(0);
+                response.setSiguienteEstado("Completado");
+                break;
+            default:
+                response.setProgreso(0.0);
+                response.setTiempoRestante(tiempoTotal);
+                break;
+        }
+        
+        response.setTiempoTotal(tiempoTotal);
+    }
+
+    private String obtenerTextoEstado(EstadoPedido estado) {
+        switch (estado) {
+            case EN_CARRITO: return "En Carrito";
+            case PAGADO: return "Pago Confirmado";
+            case CONFIRMADO: return "Pedido Confirmado";
+            case EN_ENVIO: return "En Camino";
+            case ENTREGADO: return "Entregado";
+            default: return "Estado Desconocido";
+        }
     }
     
     /**
