@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 //@Controller
 @RequestMapping("/cliente")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ClienteController {
     private final ClienteService clienteService;
     private final SesionMockeada sesion;
@@ -72,6 +73,10 @@ public class ClienteController {
     }
     @PostMapping("/eliminar")
     public ResponseEntity<String> eliminarCuenta() {
+        Long idUsuarioActual = sesion.getIdSesionActual();
+        if (idUsuarioActual == null) {
+            return ResponseEntity.status(401).body("Ningún usuario está logueado");
+        }
         ResponseEntity<String> eliminado = clienteService.eliminarCuenta();
         sesion.cerrarSesion();
         return eliminado;

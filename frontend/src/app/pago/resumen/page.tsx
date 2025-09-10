@@ -89,25 +89,25 @@ export default function PagoResumenPage() {
         {/* Lado Izquierdo: Resumen y volver */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <h2 className="text-2xl font-bold mb-4">Resumen del Pedido</h2>
-            <div className="mb-2 font-medium">Vendedor: {resumen.vendedorNombre}</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Resumen del Pedido</h2>
+            <div className="mb-2 font-medium text-gray-900">Vendedor: {resumen.vendedorNombre}</div>
             
             {/* Mostrar información específica según el método de pago */}
             {resumen.metodoPago === 'TRANSFERENCIA' && (
               <>
-                <div className="mb-2 text-sm">CUIT: {resumen.vendedorCuit}</div>
-                <div className="mb-2 text-sm">CBU: {resumen.vendedorCbu}</div>
+                <div className="mb-2 text-sm text-gray-900">CUIT: {resumen.vendedorCuit}</div>
+                <div className="mb-2 text-sm text-gray-900">CBU: {resumen.vendedorCbu}</div>
               </>
             )}
-            <div className="mb-4">
+            <div className="mb-4 text-gray-900">
               {resumen.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
+                <div key={i} className="flex justify-between text-sm text-gray-900">
                   <span>{item.cantidad}x {item.nombre}</span>
                   <span>${item.subtotal.toFixed(2)}</span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between font-semibold">
+            <div className="flex justify-between font-semibold text-gray-900">
               <span>Subtotal:</span>
               <span>${resumen.subtotal.toFixed(2)}</span>
             </div>
@@ -117,13 +117,13 @@ export default function PagoResumenPage() {
                 <span>+${resumen.recargo.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-lg mt-2">
+            <div className="flex justify-between font-bold text-lg mt-2 text-gray-900">
               <span>Total:</span>
               <span>${resumen.total.toFixed(2)}</span>
             </div>
           </div>
           <button
-            className="mt-8 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+            className="mt-8 bg-green-500 text-gray-900 py-2 px-4 rounded hover:bg-green-900"
             onClick={() => router.push("/")}
           >
             Volver al inicio
@@ -140,7 +140,7 @@ export default function PagoResumenPage() {
         </div>
       </div>
       {/* Mensaje de preparación y tiempo de envío */}
-      <div className="mt-8 text-center text-lg font-medium">
+      <div className="mt-8 text-center text-lg font-medium text-gray-900">
         Tu pedido está en preparación, llega en <span className="text-blue-600 font-bold">{resumen.tiempoEnvio} minutos</span>.
       </div>
     </div>

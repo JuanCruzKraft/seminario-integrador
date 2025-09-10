@@ -191,7 +191,7 @@ export default function PagoPage() {
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Procesar Pago
           </h1>
 
@@ -204,7 +204,7 @@ export default function PagoPage() {
           {/* Method Selection */}
           {!selectedMethod && (
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Seleccionar Método de Pago</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Seleccionar Método de Pago</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={() => handleMethodSelection(MetodoPago.TARJETA_CREDITO)}
@@ -213,8 +213,8 @@ export default function PagoPage() {
                 >
                   <div className="text-center">
                     <div className="text-2xl mb-2">💳</div>
-                    <h3 className="font-semibold">Tarjeta de Crédito</h3>
-                    <p className="text-sm text-gray-600 mt-1">Recargo del 10%</p>
+                    <h3 className="font-semibold text-gray-900">Tarjeta de Crédito</h3>
+                    <p className="text-sm text-gray-700 mt-1">Recargo del 10%</p>
                   </div>
                 </button>
 
@@ -225,8 +225,8 @@ export default function PagoPage() {
                 >
                   <div className="text-center">
                     <div className="text-2xl mb-2">💳</div>
-                    <h3 className="font-semibold">Tarjeta de Débito</h3>
-                    <p className="text-sm text-gray-600 mt-1">Sin recargo</p>
+                    <h3 className="font-semibold text-gray-900">Tarjeta de Débito</h3>
+                    <p className="text-sm text-gray-700 mt-1">Sin recargo</p>
                   </div>
                 </button>
 
@@ -237,8 +237,8 @@ export default function PagoPage() {
                 >
                   <div className="text-center">
                     <div className="text-2xl mb-2">🏦</div>
-                    <h3 className="font-semibold">Transferencia</h3>
-                    <p className="text-sm text-gray-600 mt-1">Sin recargo</p>
+                    <h3 className="font-semibold text-gray-900">Transferencia</h3>
+                    <p className="text-sm text-gray-700 mt-1">Sin recargo</p>
                   </div>
                 </button>
               </div>
@@ -248,7 +248,7 @@ export default function PagoPage() {
           {loading && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-              <p className="mt-4 text-gray-600">Cargando...</p>
+              <p className="mt-4 text-gray-900">Cargando...</p>
             </div>
           )}
 
@@ -257,19 +257,19 @@ export default function PagoPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Order Summary */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Resumen del Pedido</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumen del Pedido</h3>
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <h4 className="font-medium mb-2">Vendedor: {paymentInfo.vendedorNombre}</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">Vendedor: {paymentInfo.vendedorNombre}</h4>
                   <div className="space-y-2">
                     {paymentInfo.items.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
+                      <div key={index} className="flex justify-between text-sm text-gray-900">
                         <span>{item.cantidad}x {item.nombre}</span>
                         <span>{formatCurrency(item.subtotal)}</span>
                       </div>
                     ))}
                   </div>
                   <hr className="my-3" />
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-1 text-sm text-gray-900">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
                       <span>{formatCurrency(paymentInfo.subtotal)}</span>
@@ -290,7 +290,7 @@ export default function PagoPage() {
 
               {/* Payment Form */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Datos del Pago - {selectedMethod === MetodoPago.TARJETA_CREDITO ? 'Tarjeta de Crédito' : 
                   selectedMethod === MetodoPago.TARJETA_DEBITO ? 'Tarjeta de Débito' : 'Transferencia'}
                 </h3>
@@ -298,7 +298,7 @@ export default function PagoPage() {
                 {(selectedMethod === MetodoPago.TARJETA_CREDITO || selectedMethod === MetodoPago.TARJETA_DEBITO) && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
                         Número de Tarjeta *
                       </label>
                       <input
@@ -316,7 +316,7 @@ export default function PagoPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
                         Nombre del Titular *
                       </label>
                       <input

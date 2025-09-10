@@ -1,12 +1,12 @@
 import type { BaseResponse } from './common';
 
-export interface VisualizarItemMenuRequest {
-  vendedorid: number;
-}
-
 export interface CategoriaDTO {
   id: number;
   nombre: string;
+}
+
+export interface VisualizarItemMenuRequest {
+  vendedorid: number;
 }
 
 export interface ItemMenuDTO {
@@ -22,7 +22,7 @@ export interface ItemMenuDTO {
   tamanio?: number; // Solo para bebidas
   graduacionAlcoholica?: number; // Solo para bebidas
   calorias?: number; // Solo para comidas
-  categorias: CategoriaDTO[];
+  categorias?: CategoriaDTO[];
 }
 
 export interface VisualizarItemMenuResponse extends BaseResponse {

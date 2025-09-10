@@ -46,23 +46,37 @@ export class AuthService {
 
   static logout(): void {
     localStorage.removeItem('user');
+    localStorage.removeItem('carrito');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('carrito');
   }
 
   static getCurrentUser(): UserSession | null {
     try {
-      const userData = localStorage.getItem('user');
-      return userData ? JSON.parse(userData) : null;
+      const userData = sessionStorage.getItem('user');
+      if (!userData) return null;
+      
+      const user = JSON.parse(userData);
+      
+      // Validar que el objeto tenga las propiedades mínimas requeridas
+      if (!user.idCliente || !user.isLoggedIn) {
+        this.logout(); // Limpiar datos inválidos
+        return null;
+      }
+      
+      return user;
     } catch {
+      this.logout(); // Limpiar datos corruptos
       return null;
     }
   }
 
   static saveUser(user: UserSession): void {
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
   }
 
   static isAuthenticated(): boolean {
     const user = this.getCurrentUser();
-    return user?.isLoggedIn ?? false;
+    return !!(user?.isLoggedIn && user?.idCliente);
   }
 }

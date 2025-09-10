@@ -12,7 +12,16 @@ export function useAuth() {
     // Solo ejecutar en cliente
     if (typeof window !== 'undefined') {
       const currentUser = AuthService.getCurrentUser();
-      setUser(currentUser);
+      
+      // Validar que los datos del usuario sean válidos
+      if (currentUser && currentUser.isLoggedIn && currentUser.idCliente) {
+        setUser(currentUser);
+      } else {
+        // Si los datos no son válidos, limpiar la sesión
+        AuthService.logout();
+        setUser(null);
+      }
+      
       setLoading(false);
     }
   }, []);
