@@ -8,7 +8,7 @@ import { useCarrito } from '@/contexts/CarritoContext'
 import { getItemMenusByVendedor } from '@/services/itemMenuService'
 import { addItemToCarrito } from '@/services/carritoService'
 import CarritoDropdown from '@/components/CarritoDropdown'
-import type { ItemMenuDTO } from '@/types/itemMenu'
+import type { ItemMenuDTO, CategoriaDTO } from '@/types/itemMenu'
 import axios from 'axios'
 
 export default function MenuPage() {
@@ -25,6 +25,11 @@ export default function MenuPage() {
   const [loadingById, setLoadingById] = useState<Record<number, boolean>>({})
   const [errorById, setErrorById] = useState<Record<number, string | null>>({})
   const [successById, setSuccessById] = useState<Record<number, string | null>>({})
+  
+  // Estados para filtrado por categorías
+  const [availableCategories, setAvailableCategories] = useState<CategoriaDTO[]>([])
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set())
+  const [filteredItems, setFilteredItems] = useState<ItemMenuDTO[]>([])
 
   const vendedorId = searchParams.get('vendedorId')
   const vendedorNombre = searchParams.get('vendedorNombre')
@@ -61,6 +66,52 @@ export default function MenuPage() {
     }
   }, [isAuthenticated, vendedorId])
 
+  // Extraer categorías únicas cuando cambian los items del menú
+  useEffect(() => {
+    console.log('🔍 DEBUG: Ejecutando useEffect para extraer categorías')
+    console.log('🔍 DEBUG: itemMenus:', itemMenus)
+    console.log('🔍 DEBUG: itemMenus.length:', itemMenus.length)
+    
+    const categorias = new Map<number, CategoriaDTO>()
+    
+    itemMenus.forEach((item, index) => {
+      console.log(`🔍 DEBUG: Item ${index}:`, item)
+      console.log(`🔍 DEBUG: Item ${index} categorias:`, item.categorias)
+      console.log(`🔍 DEBUG: Item ${index} categorias tipo:`, typeof item.categorias)
+      console.log(`🔍 DEBUG: Item ${index} categorias es array:`, Array.isArray(item.categorias))
+      
+      if (item.categorias && Array.isArray(item.categorias)) {
+        item.categorias.forEach(categoria => {
+          console.log(`🔍 DEBUG: Procesando categoria:`, categoria)
+          if (!categorias.has(categoria.id)) {
+            categorias.set(categoria.id, categoria)
+          }
+        })
+      }
+    })
+    
+    const categoriasArray = Array.from(categorias.values())
+    console.log('🔍 DEBUG: Categorías extraídas:', categoriasArray)
+    setAvailableCategories(categoriasArray)
+  }, [itemMenus])
+
+  // Filtrar items basado en las categorías seleccionadas
+  useEffect(() => {
+    if (selectedCategoryIds.size === 0) {
+      // Si no hay categorías seleccionadas, mostrar todos los items
+      setFilteredItems(itemMenus)
+    } else {
+      // Filtrar items que tengan al menos una de las categorías seleccionadas
+      const filtered = itemMenus.filter(item => {
+        if (!item.categorias || !Array.isArray(item.categorias)) {
+          return false
+        }
+        return item.categorias.some(categoria => selectedCategoryIds.has(categoria.id))
+      })
+      setFilteredItems(filtered)
+    }
+  }, [itemMenus, selectedCategoryIds])
+
   // Cargar carrito cuando se autentica el usuario
   useEffect(() => {
     if (isAuthenticated) {
@@ -92,6 +143,22 @@ export default function MenuPage() {
     if (!qtyById[itemId]) {
       setQtyById(prev => ({ ...prev, [itemId]: 1 }))
     }
+  }
+
+  const handleCategoryFilter = (categoryId: number) => {
+    setSelectedCategoryIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId)
+      } else {
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
+  }
+
+  const clearCategoryFilters = () => {
+    setSelectedCategoryIds(new Set())
   }
 
   const handleAgregarAlCarrito = async (item: ItemMenuDTO) => {
@@ -238,6 +305,47 @@ export default function MenuPage() {
           </div>
         </div>
 
+        {/* Filtros por Categorías */}
+        {availableCategories.length > 0 && (
+          <div className="mb-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Filtrar por Categorías</h3>
+                {selectedCategoryIds.size > 0 && (
+                  <button
+                    onClick={clearCategoryFilters}
+                    className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {availableCategories.map((categoria) => (
+                  <button
+                    key={categoria.id}
+                    onClick={() => handleCategoryFilter(categoria.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedCategoryIds.has(categoria.id)
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {categoria.nombre}
+                  </button>
+                ))}
+              </div>
+              
+              {selectedCategoryIds.size > 0 && (
+                <div className="mt-3 text-sm text-gray-600">
+                  Mostrando {filteredItems.length} de {itemMenus.length} productos
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -258,7 +366,7 @@ export default function MenuPage() {
               <p className="text-gray-600">Cargando menú...</p>
             </div>
           </div>
-        ) : itemMenus.length === 0 ? (
+        ) : filteredItems.length === 0 && itemMenus.length === 0 ? (
           /* Empty State */
           <div className="bg-white shadow rounded-lg p-12">
             <div className="text-center">
@@ -277,10 +385,29 @@ export default function MenuPage() {
               </button>
             </div>
           </div>
+        ) : filteredItems.length === 0 && selectedCategoryIds.size > 0 ? (
+          /* No results for current filters */
+          <div className="bg-white shadow rounded-lg p-12">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No se encontraron productos
+              </h3>
+              <p className="text-gray-500 mb-6">
+                No hay productos que coincidan con las categorías seleccionadas.
+              </p>
+              <button
+                onClick={clearCategoryFilters}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+              >
+                Limpiar Filtros
+              </button>
+            </div>
+          </div>
         ) : (
           /* Menu Items Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {itemMenus.map((item, idx) => {
+            {filteredItems.map((item, idx) => {
               // Verificación más estricta del ID
               const itemId = item.itemMenuId
               
@@ -325,6 +452,20 @@ export default function MenuPage() {
                     <div className="flex-1">
                       <h3 className="text-lg font-medium text-gray-900">{item.nombre}</h3>
                       <p className="mt-1 text-sm text-gray-600">{item.descripcion || 'Sin descripción'}</p>
+                      
+                      {/* Mostrar categorías del item */}
+                      {item.categorias && item.categorias.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {item.categorias.map((categoria) => (
+                            <span
+                              key={categoria.id}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {categoria.nombre}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="ml-4 text-right">
                       <p className="text-lg font-semibold text-gray-900">${item.precio}</p>
@@ -436,10 +577,16 @@ export default function MenuPage() {
           <div className="mt-8 bg-white shadow rounded-lg p-6">
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {itemMenus.length} platos disponibles
+                {selectedCategoryIds.size > 0
+                  ? `${filteredItems.length} de ${itemMenus.length} platos mostrados`
+                  : `${itemMenus.length} platos disponibles`
+                }
               </h3>
               <p className="text-gray-500">
-                Explora todo el menú y encuentra tu plato favorito
+                {selectedCategoryIds.size > 0
+                  ? `Filtrado por ${selectedCategoryIds.size} categoría${selectedCategoryIds.size > 1 ? 's' : ''}`
+                  : 'Explora todo el menú y encuentra tu plato favorito'
+                }
               </p>
             </div>
           </div>
