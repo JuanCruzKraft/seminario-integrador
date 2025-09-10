@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.seminario.backend.dto.request.pedido.VerPedidosResponseDTO;
 import com.seminario.backend.dto.response.EstadoPedidoResponseDTO;
 import com.seminario.backend.service.PedidoService;
 
@@ -29,5 +30,16 @@ public class PedidoController {
         } else {
             return ResponseEntity.status(400).body(response);
         }
+    }
+
+    @GetMapping("/curso")
+    public VerPedidosResponseDTO verPedidosEnCurso() {
+        return pedidoService.verPedidosEnCurso();
+    }
+
+    
+    @GetMapping("/historial")
+    public VerPedidosResponseDTO verHistorialPedidos() {
+        return pedidoService.verHistorialPedidos();
     }
 }

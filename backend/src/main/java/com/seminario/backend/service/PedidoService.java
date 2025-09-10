@@ -4,13 +4,19 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.seminario.backend.dto.ItemPedidoDTO;
+import com.seminario.backend.dto.PedidoDTO;
+import com.seminario.backend.dto.request.pedido.VerPedidosResponseDTO;
 import com.seminario.backend.dto.response.EstadoPedidoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
+import com.seminario.backend.model.ItemPedido;
 import com.seminario.backend.model.Pedido;
+import com.seminario.backend.repository.ItemPedidoRepository;
 import com.seminario.backend.repository.PedidoRepository;
 import com.seminario.backend.sesion.SesionMockeada;
 
@@ -18,27 +24,16 @@ import com.seminario.backend.sesion.SesionMockeada;
 public class PedidoService {
     
     private final PedidoRepository pedidoRepository;
+    private final ItemPedidoRepository itemPedidoRepository;
     private final SesionMockeada sesion;
     private final Random random = new Random();
     
-    public PedidoService(PedidoRepository pedidoRepository, SesionMockeada sesion) {
+    public PedidoService(PedidoRepository pedidoRepository, SesionMockeada sesion, ItemPedidoRepository itemPedidoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.sesion = sesion;
+        this.itemPedidoRepository = itemPedidoRepository;
     }
     
-    /**
-     * Ejecuta cada 30 segundos para verificar transiciones pendientes
-     */
-    // @Scheduled(fixedRate = 30000) // 30 segundos
-    // public void procesarTransicionesEstado() {
-    //     procesarConfirmadoAEnEnvio();
-    //     procesarEnEnvioAEntregado();
-    // }
-
-    
-    /**
-     * Programa las transiciones automáticas para un pedido recién confirmado
-     */
     @Async
     public void programarTransicionesPedido(Long pedidoId) {
         try {
@@ -76,89 +71,10 @@ public class PedidoService {
         }
     }
     
-    /**
-     * Procesa pedidos CONFIRMADOS que deben pasar a EN_ENVIO (respaldo del método async)
-     */
-    // private void procesarConfirmadoAEnEnvio() {
-    //     try {
-    //         List<Pedido> pedidosConfirmados = pedidoRepository.findByEstado(EstadoPedido.CONFIRMADO);
-            
-    //         for (Pedido pedido : pedidosConfirmados) {
-    //             if (debeTransicionarAEnEnvio(pedido)) {
-    //                 pedido.setEstado(EstadoPedido.EN_ENVIO);
-    //                 pedido.setFechaModificacion(LocalDateTime.now());
-    //                 pedidoRepository.save(pedido);
-                    
-    //                 System.out.println("🚚 Pedido " + pedido.getPedidoid() + " cambió a EN_ENVIO (scheduled)");
-    //             }
-    //         }
-    //     } catch (Exception e) {
-    //         System.err.println("❌ Error procesando transiciones CONFIRMADO->EN_ENVIO: " + e.getMessage());
-    //     }
-    // }
-    
-    /**
-     * Procesa pedidos EN_ENVIO que deben pasar a ENTREGADO (respaldo del método async)
-     */
-    // private void procesarEnEnvioAEntregado() {
-    //     try {
-    //         List<Pedido> pedidosEnEnvio = pedidoRepository.findByEstado(EstadoPedido.EN_ENVIO);
-            
-    //         for (Pedido pedido : pedidosEnEnvio) {
-    //             if (debeTransicionarAEntregado(pedido)) {
-    //                 pedido.setEstado(EstadoPedido.ENTREGADO);
-    //                 pedido.setFechaModificacion(LocalDateTime.now());
-    //                 pedidoRepository.save(pedido);
-                    
-    //                 System.out.println("✅ Pedido " + pedido.getPedidoid() + " cambió a ENTREGADO (scheduled)");
-    //             }
-    //         }
-    //     } catch (Exception e) {
-    //         System.err.println("❌ Error procesando transiciones EN_ENVIO->ENTREGADO: " + e.getMessage());
-    //     }
-    // }
-    
-    /**
-     * Determina si un pedido CONFIRMADO debe pasar a EN_ENVIO
-     * Tiempo aleatorio entre 1-5 minutos desde la confirmación
-     */
-    // private boolean debeTransicionarAEnEnvio(Pedido pedido) {
-    //     if (pedido.getFechaConfirmacion() == null) {
-    //         return false;
-    //     }
-        
-    //     // Tiempo fijo de 5 minutos como máximo para el respaldo
-    //     LocalDateTime tiempoLimite = pedido.getFechaConfirmacion().plusMinutes(5);
-    //     return LocalDateTime.now().isAfter(tiempoLimite);
-    // }
-    
-    // /**
-    //  * Determina si un pedido EN_ENVIO debe pasar a ENTREGADO
-    //  * Usa el tiempo estimado de envío + tiempo máximo de respaldo
-    //  */
-    // private boolean debeTransicionarAEntregado(Pedido pedido) {
-    //     if (pedido.getFechaModificacion() == null) {
-    //         return false;
-    //     }
-        
-    //     // Tiempo estimado + 50% adicional como respaldo
-    //     int tiempoEstimadoMinutos = pedido.getTiempo_envio() != null ? pedido.getTiempo_envio() : 30;
-    //     int tiempoMaximo = (int) (tiempoEstimadoMinutos * 1.5); // 50% adicional
-        
-    //     LocalDateTime tiempoLimite = pedido.getFechaModificacion().plusMinutes(tiempoMaximo);
-    //     return LocalDateTime.now().isAfter(tiempoLimite);
-    // }
-    
-    /**
-     * Obtiene el estado actual de un pedido
-     */
     public Pedido obtenerPedido(Long pedidoId) {
         return pedidoRepository.findById(pedidoId).orElse(null);
     }
 
-    /**
-     * Obtiene el estado detallado de un pedido para el frontend
-     */
     public EstadoPedidoResponseDTO obtenerEstadoPedido(Long pedidoId) {
         EstadoPedidoResponseDTO response = new EstadoPedidoResponseDTO();
         
@@ -171,12 +87,6 @@ public class PedidoService {
                 return response;
             }
 
-            // Verificar que el pedido pertenezca al cliente actual (opcional, depende de tu sesión)
-            // if (!pedido.getCliente().getClienteid().equals(sesion.getIdSesionActual())) {
-            //     response.resultado.status = 1;
-            //     response.resultado.mensaje = "No tienes permisos para ver este pedido";
-            //     return response;
-            // }
 
             response.setPedidoId(pedidoId);
             response.setEstado(pedido.getEstado());
@@ -248,16 +158,12 @@ public class PedidoService {
         }
     }
     
-    /**
-     * Obtiene todos los pedidos por estado
-     */
+
     public List<Pedido> obtenerPedidosPorEstado(EstadoPedido estado) {
         return pedidoRepository.findByEstado(estado);
     }
     
-    /**
-     * Fuerza la transición manual de un pedido (para testing)
-     */
+
     public boolean forzarTransicionEstado(Long pedidoId, EstadoPedido nuevoEstado) {
         try {
             Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
@@ -275,5 +181,75 @@ public class PedidoService {
             System.err.println("❌ Error forzando transición: " + e.getMessage());
             return false;
         }
+    }
+
+    public VerPedidosResponseDTO verPedidosEnCurso() {
+        List<EstadoPedido> estados = List.of(EstadoPedido.CONFIRMADO, EstadoPedido.EN_ENVIO);
+       VerPedidosResponseDTO response = new VerPedidosResponseDTO();
+       List<Pedido> pedidos = pedidoRepository.findByClienteClienteidAndEstadoIn(sesion.getIdSesionActual(),estados);
+       if(pedidos!=null && !pedidos.isEmpty()){
+       for (Pedido p: pedidos){
+        PedidoDTO pedidoDTO = new PedidoDTO();
+        pedidoDTO.pedidoID = p.getPedidoid();
+        pedidoDTO.fechaConfirmacion = p.getFechaConfirmacion().toString();
+        pedidoDTO.nombreVendedor = p.getVendedor().getNombre();
+        pedidoDTO.estado = p.getEstado().toString();
+        pedidoDTO.precio = p.getPrecio();
+        pedidoDTO.costoEnvio = p.getCostoEnvio();
+        pedidoDTO.subtotalItems = p.getSubTotal_Total();
+        Set<ItemPedido> items = itemPedidoRepository.findByPedido(p);
+        for(ItemPedido item: items){
+            ItemPedidoDTO itemDTO = new ItemPedidoDTO();
+            itemDTO.itemMenuId = item.getItemMenu().getItemid();
+            itemDTO.nombre = item.getItemMenu().getNombre();
+            itemDTO.precioUnitario = item.getItemMenu().getPrecio();   
+            itemDTO.cantidad = item.getCantidad();
+            itemDTO.subtotal = item.getCantidad() * item.getItemMenu().getPrecio();
+            pedidoDTO.items.add(itemDTO); 
+        }
+        response.pedidos.add(pedidoDTO);
+       }
+        response.resultado.status = 0;
+        response.resultado.mensaje = "Historial obtenido correctamente";
+       } else {
+           response.resultado.status = 1;
+           response.resultado.mensaje = "No se encontraron pedidos en el historial";
+       }
+       return response;
+    }
+
+    public VerPedidosResponseDTO verHistorialPedidos() {
+    
+       VerPedidosResponseDTO response = new VerPedidosResponseDTO();
+       List<Pedido> pedidos = pedidoRepository.findAllByClienteClienteidAndEstado(sesion.getIdSesionActual(),EstadoPedido.ENTREGADO);
+       if(pedidos!=null && !pedidos.isEmpty()){
+       for (Pedido p: pedidos){
+        PedidoDTO pedidoDTO = new PedidoDTO();
+        pedidoDTO.pedidoID = p.getPedidoid();
+        pedidoDTO.fechaConfirmacion = p.getFechaConfirmacion().toString();
+        pedidoDTO.nombreVendedor = p.getVendedor().getNombre();
+        pedidoDTO.estado = p.getEstado().toString();
+        pedidoDTO.precio = p.getPrecio();
+        pedidoDTO.costoEnvio = p.getCostoEnvio();
+        pedidoDTO.subtotalItems = p.getSubTotal_Total();
+        Set<ItemPedido> items = itemPedidoRepository.findByPedido(p);
+        for(ItemPedido item: items){
+            ItemPedidoDTO itemDTO = new ItemPedidoDTO();
+            itemDTO.itemMenuId = item.getItemMenu().getItemid();
+            itemDTO.nombre = item.getItemMenu().getNombre();
+            itemDTO.precioUnitario = item.getItemMenu().getPrecio();   
+            itemDTO.cantidad = item.getCantidad();
+            itemDTO.subtotal = item.getCantidad() * item.getItemMenu().getPrecio();
+            pedidoDTO.items.add(itemDTO); 
+        }
+        response.pedidos.add(pedidoDTO);
+       }
+        response.resultado.status = 0;
+        response.resultado.mensaje = "Historial obtenido correctamente";
+       } else {
+           response.resultado.status = 1;
+           response.resultado.mensaje = "No se encontraron pedidos en el historial";
+       }
+       return response;
     }
 }
