@@ -1,5 +1,11 @@
 import type { BaseResponse } from './common';
 
+export enum MetodoPago {
+  TARJETA_CREDITO = 'TARJETA_CREDITO',
+  TARJETA_DEBITO = 'TARJETA_DEBITO',
+  TRANSFERENCIA = 'TRANSFERENCIA'
+}
+
 export interface AgregarItemRequest {
   clienteid: number;
   vendedorid: number;

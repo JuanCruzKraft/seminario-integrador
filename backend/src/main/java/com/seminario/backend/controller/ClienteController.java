@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 //@Controller
 @RequestMapping("/cliente")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ClienteController {
     private final ClienteService clienteService;
     private final SesionMockeada sesion;

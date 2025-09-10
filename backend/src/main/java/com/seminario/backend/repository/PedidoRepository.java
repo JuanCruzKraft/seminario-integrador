@@ -18,6 +18,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     //List<Pedido> findByClienteId(Long clienteId);
     List<Pedido> findByCliente_clienteid(Long clienteId);
     Pedido findByClienteClienteidAndEstado(Long clienteId, EstadoPedido estado);
+    List<Pedido> findByClienteClienteidAndEstadoOrderByFechaConfirmacionDesc(Long clienteId, EstadoPedido estado);
     Boolean existsByCliente_clienteidAndEstado(Long clienteId, EstadoPedido estado);
     List<Pedido> findByEstado(EstadoPedido estado);
 

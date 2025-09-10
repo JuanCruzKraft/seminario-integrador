@@ -11,7 +11,6 @@ import com.seminario.backend.sesion.SesionMockeada;
 
 @RestController
 @RequestMapping("/sesion")
-@CrossOrigin(origins = "http://localhost:3000")
 public class SesionController {
     
     private final SesionMockeada sesion;

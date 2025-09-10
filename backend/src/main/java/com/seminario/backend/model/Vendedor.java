@@ -34,6 +34,9 @@ public class Vendedor{
     @Column
     private String cbu;
 
+    @Column
+    private Integer tiempoEnvio; // tiempo de envío en minutos
+
     @OneToMany(mappedBy = "vendedor") //, cascade = CascadeType.ALL) //, fetch = FetchType.LAZY)   
     private List<Pedido> pedidos;
     
