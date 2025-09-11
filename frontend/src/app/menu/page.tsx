@@ -458,7 +458,19 @@ export default function MenuPage() {
                   {/* Selector de cantidad solo si está seleccionado */}
                   {selectedItems[itemId] && (
                     <div className="mb-4">
+                       <div className="mb-4">
+                          <div className="block text-sm font-medium text-gray-700"> <u>Peso</u>: {item.peso} gramos </div>
+                          {item.esBebida ? (
+                            <>
+                              <div className="block text-sm font-medium text-gray-700"> <u>Tamaño</u>: {item.tamanio} mililitros </div>
+                              <div className="block text-sm font-medium text-gray-700"> <u>Graduación Alcohólica</u>: {item.graduacionAlcoholica}%</div>
+                            </>
+                          ) : (
+                            <div className="block text-sm font-medium text-gray-700"><u>Calorías</u>: {item.calorias}</div>
+                          )}
+                        </div>
                       <div className="flex items-center justify-between">
+                       
                         <label className="block text-sm font-medium text-gray-700">Cantidad:</label>
                         <div className="flex items-center border rounded-md">
                           <button
@@ -484,6 +496,7 @@ export default function MenuPage() {
                                 handleCantidadChange(itemId, value)
                               }
                             }}
+                            
                             className="w-12 text-center border-none focus:outline-none focus:ring-0"
                             disabled={loadingById[itemId]}
                           />
