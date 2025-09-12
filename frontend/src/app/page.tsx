@@ -39,13 +39,24 @@ export default function Home() {
       setPedidosError(null)
       pedidoService.verPedidosEnCurso()
         .then(response => {
-          if (response.resultado.status === 0) {
+          // Independientemente del status, si hay pedidos los mostramos
+          if (response.pedidos && Array.isArray(response.pedidos)) {
             setPedidosEnCurso(response.pedidos)
           } else {
+            // Si no hay pedidos, establecemos array vacío
+            setPedidosEnCurso([])
+          }
+          
+          // Solo mostramos error si hay un problema real (no cuando simplemente no hay pedidos)
+          if (response.resultado.status !== 0 && response.pedidos?.length === undefined) {
             setPedidosError(response.resultado.mensaje || 'Error al cargar pedidos en curso')
           }
         })
-        .catch(() => setPedidosError('No se pudieron cargar los pedidos en curso.'))
+        .catch((error) => {
+          console.error('Error al cargar pedidos en curso:', error)
+          setPedidosError('No se pudieron cargar los pedidos en curso.')
+          setPedidosEnCurso([])
+        })
         .finally(() => setLoadingPedidos(false))
     }
   }, [isAuthenticated])
@@ -395,22 +406,26 @@ export default function Home() {
               </div>
             ) : pedidosEnCurso.length === 0 && !pedidosError ? (
               /* Empty State */
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🍽️</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center py-16">
+                <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   No tienes pedidos en curso
                 </h3>
-                <p className="text-gray-500 mb-6">
-                  ¡Es un buen momento para pedir algo delicioso!
+                <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                  ¡Es un buen momento para pedir algo delicioso! Explora los restaurantes disponibles y encuentra tu comida favorita.
                 </p>
                 <button
                   onClick={handleVendedores}
-                  className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors"
+                  className="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md"
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7 7-7" />
                   </svg>
-                  Ver Restaurantes
+                  Explorar Vendedores
                 </button>
               </div>
             ) : (
