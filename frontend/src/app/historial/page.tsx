@@ -12,6 +12,7 @@ export default function HistorialPage() {
   const [pedidos, setPedidos] = useState<PedidoDTO[]>([])
   const [loadingPedidos, setLoadingPedidos] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [expandedPedidos, setExpandedPedidos] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -84,6 +85,16 @@ export default function HistorialPage() {
       default:
         return estado
     }
+  }
+
+  const togglePedidoExpanded = (pedidoId: number) => {
+    const newExpanded = new Set(expandedPedidos)
+    if (newExpanded.has(pedidoId)) {
+      newExpanded.delete(pedidoId)
+    } else {
+      newExpanded.add(pedidoId)
+    }
+    setExpandedPedidos(newExpanded)
   }
 
   // Mostrar loading mientras verificamos autenticación
@@ -196,78 +207,109 @@ export default function HistorialPage() {
             ) : (
               /* Pedidos List */
               <div className="space-y-6">
-                {pedidos.map((pedido) => (
-                  <div
-                    key={pedido.pedidoID}
-                    className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                  >
-                    {/* Header del pedido */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center space-x-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Pedido #{pedido.pedidoID}
-                          </h3>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoColor(pedido.estado)}`}>
-                            {formatEstado(pedido.estado)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {formatFecha(pedido.fechaConfirmacion)}
-                        </p>
-                        <p className="text-sm font-medium text-gray-700 mt-1">
-                          {pedido.nombreVendedor}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
-                          ${pedido.precio.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Total con envío
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Items del pedido */}
-                    <div className="border-t border-gray-200 pt-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-3">Items del pedido:</h4>
-                      <div className="space-y-2">
-                        {pedido.items.map((item) => (
-                          <div key={item.itemPedidoId} className="flex justify-between items-center">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
-                              <p className="text-xs text-gray-500">
-                                ${item.precioUnitario.toFixed(2)} x {item.cantidad}
-                              </p>
+                {pedidos.map((pedido) => {
+                  const isExpanded = expandedPedidos.has(pedido.pedidoID)
+                  return (
+                    <div
+                      key={pedido.pedidoID}
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      {/* Header del pedido - Clickeable */}
+                      <div 
+                        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => togglePedidoExpanded(pedido.pedidoID)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                Pedido #{pedido.pedidoID}
+                              </h3>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoColor(pedido.estado)}`}>
+                                {formatEstado(pedido.estado)}
+                              </span>
                             </div>
-                            <p className="text-sm font-medium text-gray-900">
-                              ${item.subtotal.toFixed(2)}
+                            <p className="text-sm text-gray-500 mt-1">
+                              {formatFecha(pedido.fechaConfirmacion)}
+                            </p>
+                            <p className="text-sm font-medium text-gray-700 mt-1">
+                              {pedido.nombreVendedor}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              {pedido.items.length} item{pedido.items.length !== 1 ? 's' : ''} • Click para ver detalles
                             </p>
                           </div>
-                        ))}
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-gray-900">
+                                ${pedido.precio.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Total con envío
+                              </p>
+                            </div>
+                            <div className="flex items-center">
+                              <svg 
+                                className={`w-5 h-5 text-gray-400 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Resumen de costos */}
-                    <div className="border-t border-gray-200 pt-4 mt-4">
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Subtotal items:</span>
-                          <span className="text-gray-900">${pedido.subtotalItems.toFixed(2)}</span>
+                      {/* Contenido expandible */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-200">
+                          {/* Items del pedido */}
+                          <div className="p-6 bg-gray-50">
+                            <h4 className="text-sm font-medium text-gray-900 mb-3">Items del pedido:</h4>
+                            <div className="space-y-3">
+                              {pedido.items.map((item, index) => (
+                                <div 
+                                  key={item.itemPedidoId || `item-${pedido.pedidoID}-${index}`} 
+                                  className="flex justify-between items-center bg-white p-3 rounded-md"
+                                >
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
+                                    <p className="text-xs text-gray-500">
+                                      ${item.precioUnitario.toFixed(2)} x {item.cantidad}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    ${item.subtotal.toFixed(2)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Resumen de costos */}
+                          <div className="p-6 bg-white border-t border-gray-200">
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Subtotal items:</span>
+                                <span className="text-gray-900">${pedido.subtotalItems.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Costo de envío:</span>
+                                <span className="text-gray-900">${Number(pedido.costoEnvio).toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-2">
+                                <span className="text-gray-900">Total:</span>
+                                <span className="text-gray-900">${pedido.precio.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Costo de envío:</span>
-                          <span className="text-gray-900">${Number(pedido.costoEnvio).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-2">
-                          <span className="text-gray-900">Total:</span>
-                          <span className="text-gray-900">${pedido.precio.toFixed(2)}</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
