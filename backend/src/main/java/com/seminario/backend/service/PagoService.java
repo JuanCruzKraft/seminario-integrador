@@ -224,11 +224,10 @@ public class PagoService {
     }
     
     private String validarDatosTransferencia(ConfirmarCarritoRequestDTO request) {
-        if ((request.getCbu() == null || request.getCbu().trim().isEmpty()) &&
-            (request.getAlias() == null || request.getAlias().trim().isEmpty())) {
-            return "Debe proporcionar un CBU o un alias para la transferencia";
-        }
-        return null; // Validación exitosa
+        // Para transferencias, el usuario no necesita proporcionar CBU/alias
+        // porque va a transferir AL vendedor, no recibir dinero
+        // Solo validamos que tenga observaciones si fuera necesario (opcional)
+        return null; // Validación exitosa - no se requieren datos adicionales
     }
     
     private boolean procesarMetodoPago(ConfirmarCarritoRequestDTO request) {
@@ -261,10 +260,10 @@ public class PagoService {
     
     private boolean procesarPagoTransferencia(ConfirmarCarritoRequestDTO request) {
         // Simular procesamiento de transferencia
-        if (request.getCbu() != null && !request.getCbu().isEmpty()) {
-            System.out.println("Procesando transferencia a CBU: " + request.getCbu());
-        } else {
-            System.out.println("Procesando transferencia a alias: " + request.getAlias());
+        // El usuario transferirá al vendedor usando los datos mostrados en el frontend
+        System.out.println("Procesando pago por transferencia");
+        if (request.getObservaciones() != null && !request.getObservaciones().trim().isEmpty()) {
+            System.out.println("Observaciones del cliente: " + request.getObservaciones());
         }
         return true; // Simulamos que siempre es exitoso
     }
