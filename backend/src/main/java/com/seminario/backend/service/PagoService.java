@@ -390,36 +390,90 @@ public class PagoService {
     
     public byte[] generarPDF(Long pedidoId) {
         try {
-            // Por ahora, genero un PDF simple como placeholder
-            // Aquí se podría usar una librería como iText o similar
-            String contenido = "RESUMEN DE PEDIDO #" + pedidoId + "\n\n";
+            // Crear documento PDF usando iText
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(baos);
+            com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
+            com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf);
+            
+            // Agregar contenido al PDF
+            document.add(new com.itextpdf.layout.element.Paragraph("RESUMEN DE PEDIDO #" + pedidoId)
+                    .setFontSize(18)
+                    .setBold());
+            
+            document.add(new com.itextpdf.layout.element.Paragraph("\n"));
             
             Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
             if (pedido != null) {
-                contenido += "Vendedor: " + pedido.getVendedor().getNombre() + "\n";
-                contenido += "Cliente: " + pedido.getCliente().getNombre() + "\n";
-                contenido += "Fecha: " + pedido.getFechaConfirmacion() + "\n\n";
+                // Información del pedido
+                document.add(new com.itextpdf.layout.element.Paragraph("INFORMACIÓN DEL PEDIDO")
+                        .setFontSize(14)
+                        .setBold());
                 
-                contenido += "ITEMS:\n";
+                document.add(new com.itextpdf.layout.element.Paragraph("Vendedor: " + pedido.getVendedor().getNombre()));
+                document.add(new com.itextpdf.layout.element.Paragraph("Cliente: " + pedido.getCliente().getNombre()));
+                document.add(new com.itextpdf.layout.element.Paragraph("Fecha: " + pedido.getFechaConfirmacion()));
+                
+                document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                
+                // Items del pedido
+                document.add(new com.itextpdf.layout.element.Paragraph("ITEMS DEL PEDIDO")
+                        .setFontSize(14)
+                        .setBold());
+                
                 Set<ItemPedido> items = itemPedidoRepository.findByPedido(pedido);
+                double totalItems = 0;
+                
                 for (ItemPedido item : items) {
-                    contenido += item.getCantidad() + "x " + item.getItemMenu().getNombre() + 
-                               " - $" + item.getSubtotal() + "\n";
+                    String lineaItem = item.getCantidad() + "x " + item.getItemMenu().getNombre() + 
+                                     " - $" + String.format("%.2f", item.getSubtotal());
+                    document.add(new com.itextpdf.layout.element.Paragraph(lineaItem));
+                    totalItems += item.getSubtotal();
                 }
                 
+                document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                
+                // Información de pago
                 List<Pago> pagos = pagoRepository.findByPedidoPedidoid(pedido.getPedidoid());
                 if (!pagos.isEmpty()) {
                     Pago pago = pagos.get(0);
-                    contenido += "\nMétodo de pago: " + pago.getMetodoPago() + "\n";
-                    contenido += "Total: $" + pago.getMonto() + "\n";
+                    
+                    document.add(new com.itextpdf.layout.element.Paragraph("INFORMACIÓN DE PAGO")
+                            .setFontSize(14)
+                            .setBold());
+                    
+                    document.add(new com.itextpdf.layout.element.Paragraph("Método de pago: " + pago.getMetodoPago()));
+                    document.add(new com.itextpdf.layout.element.Paragraph("Estado del pago: " + pago.getEstado()));
+                    
+                    document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                    document.add(new com.itextpdf.layout.element.Paragraph("TOTAL: $" + String.format("%.2f", pago.getMonto()))
+                            .setFontSize(16)
+                            .setBold());
                 }
+            } else {
+                document.add(new com.itextpdf.layout.element.Paragraph("Pedido no encontrado"));
             }
             
-            // Por simplicidad, devuelvo el contenido como texto (debería ser PDF real)
-            return contenido.getBytes("UTF-8");
+            // Cerrar documento
+            document.close();
+            
+            return baos.toByteArray();
             
         } catch (Exception e) {
-            return ("Error generando PDF: " + e.getMessage()).getBytes();
+            // En caso de error, generar un PDF simple con el mensaje de error
+            try {
+                java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(baos);
+                com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
+                com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf);
+                
+                document.add(new com.itextpdf.layout.element.Paragraph("Error generando PDF: " + e.getMessage()));
+                document.close();
+                
+                return baos.toByteArray();
+            } catch (Exception ex) {
+                return ("Error crítico generando PDF: " + ex.getMessage()).getBytes();
+            }
         }
     }
 }

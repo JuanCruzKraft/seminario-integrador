@@ -36,6 +36,38 @@ export default function PagoPage() {
   const [paymentInfo, setPaymentInfo] = useState<PrepararPagoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Bloquear ventanas emergentes de autocompletado
+  useEffect(() => {
+    // Desactiva las ventanas emergentes de autocompletado en Chrome/Edge
+    const style = document.createElement('style');
+    style.textContent = `
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        -webkit-animation: autofill-hack 0s forwards;
+        animation: autofill-hack 0s forwards;
+      }
+      @-webkit-keyframes autofill-hack {
+        to {
+          -webkit-text-fill-color: #000;
+          background: transparent;
+        }
+      }
+      @keyframes autofill-hack {
+        to {
+          color: #000;
+          background: transparent;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   
   // Form states
   const [cardData, setCardData] = useState({
@@ -49,6 +81,35 @@ export default function PagoPage() {
   const [transferData, setTransferData] = useState({
     observaciones: ''
   });
+
+  // Función para formatear número de tarjeta
+  const formatCardNumber = (value: string) => {
+    // Eliminar todos los espacios y caracteres no numéricos
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    // Agregar espacios cada 4 dígitos
+    const matches = v.match(/\d{4,16}/g);
+    const match = matches && matches[0] || '';
+    const parts = [];
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    if (parts.length) {
+      return parts.join(' ');
+    } else {
+      return v;
+    }
+  };
+
+  // Función para formatear fecha de vencimiento
+  const formatExpiryDate = (value: string) => {
+    // Eliminar caracteres no numéricos
+    const v = value.replace(/\D/g, '');
+    // Agregar la barra automáticamente
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    }
+    return v;
+  };
 
   const preparePayment = async (method: MetodoPago) => {
     setLoading(true);
@@ -189,6 +250,15 @@ export default function PagoPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
+      <style jsx>{`
+        form[data-payment-form] input:-webkit-autofill {
+          -webkit-box-shadow: 0 0 0 1000px white inset !important;
+          -webkit-text-fill-color: black !important;
+        }
+        form[data-payment-form] input {
+          font-family: -webkit-pictograph !important;
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
@@ -296,19 +366,39 @@ export default function PagoPage() {
                 </h3>
 
                 {(selectedMethod === MetodoPago.TARJETA_CREDITO || selectedMethod === MetodoPago.TARJETA_DEBITO) && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-1">
-                        Número de Tarjeta *
-                      </label>
-                      <input
-                        type="text"
-                        value={cardData.numeroTarjeta}
-                        onChange={(e) => setCardData({ ...cardData, numeroTarjeta: e.target.value })}
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        maxLength={19}
-                      />
+                  <form 
+                    autoComplete="off" 
+                    onSubmit={(e) => e.preventDefault()}
+                    data-payment-form="true"
+                    style={{ WebkitAutofill: 'none' } as any}
+                  >
+                    {/* Campos ocultos para confundir al navegador */}
+                    <input type="text" name="username" autoComplete="username" style={{ display: 'none' }} tabIndex={-1} />
+                    <input type="password" name="password" autoComplete="current-password" style={{ display: 'none' }} tabIndex={-1} />
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Número de Tarjeta *
+                        </label>
+                        <input
+                          type="text"
+                          name="search-query-field"
+                          value={cardData.numeroTarjeta}
+                          onChange={(e) => {
+                            const formatted = formatCardNumber(e.target.value);
+                            setCardData({ ...cardData, numeroTarjeta: formatted });
+                          }}
+                          placeholder="1234 5678 9012 3456"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          maxLength={19}
+                          autoComplete="one-time-code"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck="false"
+                          data-form-type="search"
+                          role="textbox"
+                        />
                       <p className="text-xs text-gray-500 mt-1">
                         {selectedMethod === MetodoPago.TARJETA_CREDITO ? 
                           'Debe comenzar con 5' : 'Debe comenzar con 4'}
@@ -321,10 +411,17 @@ export default function PagoPage() {
                       </label>
                       <input
                         type="text"
+                        name="display-name-field"
                         value={cardData.nombreTitular}
-                        onChange={(e) => setCardData({ ...cardData, nombreTitular: e.target.value })}
-                        placeholder="Juan Pérez"
+                        onChange={(e) => setCardData({ ...cardData, nombreTitular: e.target.value.toUpperCase() })}
+                        placeholder="NOMBRE Y APELLIDO"
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autoComplete="one-time-code"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        data-form-type="search"
+                        role="textbox"
                       />
                     </div>
 
@@ -335,11 +432,21 @@ export default function PagoPage() {
                         </label>
                         <input
                           type="text"
+                          name="expiration-date-field"
                           value={cardData.fechaVencimiento}
-                          onChange={(e) => setCardData({ ...cardData, fechaVencimiento: e.target.value })}
+                          onChange={(e) => {
+                            const formatted = formatExpiryDate(e.target.value);
+                            setCardData({ ...cardData, fechaVencimiento: formatted });
+                          }}
                           placeholder="MM/AA"
                           className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           maxLength={5}
+                          autoComplete="one-time-code"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck="false"
+                          data-form-type="search"
+                          role="textbox"
                         />
                       </div>
 
@@ -349,11 +456,22 @@ export default function PagoPage() {
                         </label>
                         <input
                           type="text"
+                          name="security-code-field"
                           value={cardData.codigoSeguridad}
-                          onChange={(e) => setCardData({ ...cardData, codigoSeguridad: e.target.value })}
+                          onChange={(e) => {
+                            // Solo permitir números y máximo 4 caracteres
+                            const value = e.target.value.replace(/\D/g, '');
+                            setCardData({ ...cardData, codigoSeguridad: value });
+                          }}
                           placeholder="123"
                           className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           maxLength={4}
+                          autoComplete="one-time-code"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck="false"
+                          data-form-type="search"
+                          role="textbox"
                         />
                       </div>
                     </div>
@@ -378,7 +496,8 @@ export default function PagoPage() {
                     >
                       {loading ? 'Procesando...' : `Pagar ${formatCurrency(paymentInfo.total)}`}
                     </button>
-                  </div>
+                    </div>
+                  </form>
                 )}
 
                 {selectedMethod === MetodoPago.TRANSFERENCIA && (
