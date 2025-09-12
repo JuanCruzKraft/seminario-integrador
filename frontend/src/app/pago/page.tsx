@@ -382,45 +382,77 @@ export default function PagoPage() {
                 )}
 
                 {selectedMethod === MetodoPago.TRANSFERENCIA && (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* Datos del Vendedor para Transferencia */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-800 mb-2">Datos para Transferencia</h4>
+                      <h4 className="font-medium text-blue-800 mb-3">Datos para Transferencia Bancaria</h4>
                       <div className="space-y-2 text-sm">
                         <div>
-                          <span className="font-medium">CUIT:</span> {paymentInfo.vendedorCuit}
+                          <span className="font-medium text-gray-700">Titular:</span> 
+                          <span className="ml-2">{paymentInfo.vendedorNombre}</span>
                         </div>
                         <div>
-                          <span className="font-medium">CBU:</span> {paymentInfo.vendedorCbu}
+                          <span className="font-medium text-gray-700">CUIT:</span> 
+                          <span className="ml-2 font-mono">{paymentInfo.vendedorCuit}</span>
                         </div>
                         <div>
-                          <span className="font-medium">Titular:</span> {paymentInfo.vendedorNombre}
+                          <span className="font-medium text-gray-700">CBU:</span> 
+                          <span className="ml-2 font-mono">{paymentInfo.vendedorCbu}</span>
                         </div>
                         <div>
-                          <span className="font-medium">Monto:</span> {formatCurrency(paymentInfo.total)}
+                          <span className="font-medium text-gray-700">Monto a transferir:</span> 
+                          <span className="ml-2 text-lg font-bold text-green-600">{formatCurrency(paymentInfo.total)}</span>
                         </div>
                       </div>
                     </div>
 
+                    {/* Mercado Pago QR */}
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-800 mb-3 text-center">O paga con Mercado Pago</h4>
+                      <div className="flex flex-col items-center">
+                        <img 
+                          src="/Qr.png" 
+                          alt="Código QR Mercado Pago" 
+                          className="w-40 h-40 border border-gray-300 rounded-lg shadow-sm"
+                        />
+                        <p className="text-sm text-gray-600 mt-2 text-center">
+                          Escanea el código QR con la app de Mercado Pago
+                        </p>
+                        <div className="flex items-center mt-2">
+                          <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                            💳 MERCADO PAGO
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Campo de Observaciones */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Observaciones
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Observaciones (opcional)
                       </label>
                       <textarea
                         value={transferData.observaciones}
                         onChange={(e) => setTransferData({ ...transferData, observaciones: e.target.value })}
-                        placeholder="Incluye aquí el comprobante o número de transferencia..."
+                        placeholder="Escribe aquí cualquier comentario, número de comprobante o referencia de tu pago..."
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={4}
+                        rows={3}
                       />
                     </div>
 
-                    <button
-                      onClick={handleTransferPayment}
-                      disabled={loading}
-                      className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Procesando...' : 'Confirmar Transferencia'}
-                    </button>
+                    {/* Botón de confirmación */}
+                    <div className="border-t pt-4">
+                      <p className="text-sm text-gray-600 mb-3 text-center">
+                        Una vez que hayas realizado el pago, haz clic en el botón de abajo
+                      </p>
+                      <button
+                        onClick={handleTransferPayment}
+                        disabled={loading}
+                        className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {loading ? 'Procesando...' : '✓ Ya Pagué'}
+                      </button>
+                    </div>
                   </div>
                 )}
 
