@@ -55,6 +55,10 @@ export default function Home() {
     router.push('/vendedores')
   }
 
+  const handleHistorial = () => {
+    router.push('/historial')
+  }
+
   const handleVerMenu = (vendedor: VendedorDTO) => {
     router.push(`/menu?vendedorId=${vendedor.vendedorId}&vendedorNombre=${encodeURIComponent(vendedor.nombre)}`)
   }
@@ -231,23 +235,31 @@ export default function Home() {
           {/* </div> */}
           </button>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <button
+            onClick={handleHistorial}
+            className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+          >
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white">📍</span>
+                    <span className="text-white">�</span>
                   </div>
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    Calmate un poco
+                    Historial de Pedidos
                   </p>
-                  <p className="text-sm text-gray-500">Algo vamos a poner aca nose</p>
+                  <p className="text-sm text-gray-500">Revisa todos tus pedidos anteriores</p>
+                </div>
+                <div className="ml-auto">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               </div>
             </div>
-          </div>
+          </button>
 
           <button
             onClick={handleVerCarrito}
