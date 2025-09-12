@@ -5,16 +5,19 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useCarrito } from '@/contexts/CarritoContext'
 import { getVendedores } from '@/services/vendedorService'
+import { pedidoService } from '@/services/pedidoService'
 import { VendedorDTO } from '@/types/vendedor'
+import { PedidoDTO } from '@/types/pedido'
 
 export default function Home() {
   const { user, loading, logout, isAuthenticated } = useAuth()
   const { getTotalItems, refreshCarrito } = useCarrito()
   const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [vendedores, setVendedores] = useState<VendedorDTO[]>([])
-  const [loadingVendedores, setLoadingVendedores] = useState(false)
-  const [vendedoresError, setVendedoresError] = useState<string | null>(null)
+  const [pedidosEnCurso, setPedidosEnCurso] = useState<PedidoDTO[]>([])
+  const [loadingPedidos, setLoadingPedidos] = useState(false)
+  const [pedidosError, setPedidosError] = useState<string | null>(null)
+  const [expandedPedidos, setExpandedPedidos] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -29,15 +32,21 @@ export default function Home() {
     }
   }, [isAuthenticated, refreshCarrito])
 
-  // Cargar vendedores cuando el usuario esté autenticado
+  // Cargar pedidos en curso cuando el usuario esté autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      setLoadingVendedores(true)
-      setVendedoresError(null)
-      getVendedores()
-        .then(setVendedores)
-        .catch(() => setVendedoresError('No se pudieron cargar los vendedores.'))
-        .finally(() => setLoadingVendedores(false))
+      setLoadingPedidos(true)
+      setPedidosError(null)
+      pedidoService.verPedidosEnCurso()
+        .then(response => {
+          if (response.resultado.status === 0) {
+            setPedidosEnCurso(response.pedidos)
+          } else {
+            setPedidosError(response.resultado.mensaje || 'Error al cargar pedidos en curso')
+          }
+        })
+        .catch(() => setPedidosError('No se pudieron cargar los pedidos en curso.'))
+        .finally(() => setLoadingPedidos(false))
     }
   }, [isAuthenticated])
 
@@ -65,6 +74,69 @@ export default function Home() {
 
   const handleVerCarrito = () => {
     router.push('/carrito')
+  }
+
+  const handleVerPedido = (pedidoId: number) => {
+    router.push(`/pago/resumen?pedidoId=${pedidoId}`)
+  }
+
+  const togglePedidoExpanded = (pedidoId: number) => {
+    const newExpanded = new Set(expandedPedidos)
+    if (newExpanded.has(pedidoId)) {
+      newExpanded.delete(pedidoId)
+    } else {
+      newExpanded.add(pedidoId)
+    }
+    setExpandedPedidos(newExpanded)
+  }
+
+  const formatFecha = (fechaString: string) => {
+    try {
+      const fecha = new Date(fechaString)
+      return fecha.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch {
+      return fechaString
+    }
+  }
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado.toLowerCase()) {
+      case 'confirmado':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'en_preparacion':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'en_camino':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'entregado':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'cancelado':
+        return 'bg-red-100 text-red-800 border-red-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const formatEstado = (estado: string) => {
+    switch (estado.toLowerCase()) {
+      case 'confirmado':
+        return 'Confirmado'
+      case 'en_preparacion':
+        return 'En Preparación'
+      case 'en_camino':
+        return 'En Camino'
+      case 'entregado':
+        return 'Entregado'
+      case 'cancelado':
+        return 'Cancelado'
+      default:
+        return estado
+    }
   }
 
   const totalItemsCarrito = getTotalItems()
@@ -221,9 +293,9 @@ export default function Home() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {loadingVendedores ? '...' : vendedores.length} Vendedores
+                    Ver Restaurantes
                   </p>
-                  <p className="text-sm text-gray-500">Estan esperando tu pedido. ¡Exploralos!</p>
+                  <p className="text-sm text-gray-500">Explora y haz un nuevo pedido</p>
                 </div>
                       <div className="ml-auto">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,142 +363,167 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Sección de Vendedores */}
+        {/* Sección de Pedidos en Curso */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Restaurantes Disponibles</h2>
+            <h2 className="text-lg font-medium text-gray-900">Pedidos en Curso</h2>
             <p className="text-sm text-gray-500">
-              Explora los restaurantes cerca de ti y sus datos de envío
+              Seguí el estado de tus pedidos actuales
             </p>
           </div>
 
           {/* Error Message */}
-          {vendedoresError && (
+          {pedidosError && (
             <div className="m-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                {vendedoresError}
+                {pedidosError}
               </div>
             </div>
           )}
 
           <div className="p-6">
             {/* Loading State */}
-            {loadingVendedores ? (
+            {loadingPedidos ? (
               <div className="flex justify-center py-12">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Cargando restaurantes...</p>
+                  <p className="text-gray-600">Cargando pedidos...</p>
                 </div>
               </div>
-            ) : vendedores.length === 0 && !vendedoresError ? (
+            ) : pedidosEnCurso.length === 0 && !pedidosError ? (
               /* Empty State */
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">�️</div>
+                <div className="text-6xl mb-4">🍽️</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No hay vendedores disponibles
+                  No tienes pedidos en curso
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  Por el momento no hay restaurantes disponibles en tu zona.
+                  ¡Es un buen momento para pedir algo delicioso!
                 </p>
+                <button
+                  onClick={handleVendedores}
+                  className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7 7-7" />
+                  </svg>
+                  Ver Restaurantes
+                </button>
               </div>
             ) : (
-              /* Vendedores Grid */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {vendedores.map((vendedor) => (
-                  <div
-                    key={vendedor.vendedorId}
-                    className="bg-white overflow-hidden border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                            <span className="text-purple-600 font-semibold text-lg">
-                              {vendedor.nombre.charAt(0).toUpperCase()}
-                            </span>
+              /* Pedidos List */
+              <div className="space-y-4">
+                {pedidosEnCurso.map((pedido) => {
+                  const isExpanded = expandedPedidos.has(pedido.pedidoID)
+                  return (
+                    <div
+                      key={pedido.pedidoID}
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      {/* Header del pedido - Clickeable */}
+                      <div 
+                        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => togglePedidoExpanded(pedido.pedidoID)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                Pedido #{pedido.pedidoID}
+                              </h3>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoColor(pedido.estado)}`}>
+                                {formatEstado(pedido.estado)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {formatFecha(pedido.fechaConfirmacion)} • {pedido.nombreVendedor}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {pedido.items.length} item{pedido.items.length !== 1 ? 's' : ''} • Click para detalles
+                            </p>
                           </div>
-                          <div className="ml-3">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {vendedor.nombre}
-                            </h3>
-                            {vendedor.direccion && (
-                              <p className="text-sm text-gray-500">
-                                {vendedor.direccion}
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-gray-900">
+                                ${pedido.precio.toFixed(2)}
                               </p>
-                            )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleVerPedido(pedido.pedidoID)
+                              }}
+                              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition-colors"
+                            >
+                              Ver Seguimiento
+                            </button>
+                            <div className="flex items-center">
+                              <svg 
+                                className={`w-5 h-5 text-gray-400 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Datos Logísticos */}
-                      {vendedor.datosLogisticos && (
-                        <div className="mb-4 space-y-2">
-                          <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-green-50 p-2 rounded">
-                              <div className="flex items-center">
-                                <span className="text-green-600 mr-1">📍</span>
-                                <div>
-                                  <p className="font-medium text-green-800">Distancia</p>
-                                  <p className="text-green-600">
-                                    {vendedor.datosLogisticos.distancia.toFixed(1)} km
+
+                      {/* Contenido expandible */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-200 bg-gray-50 p-4">
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">Items del pedido:</h4>
+                          <div className="space-y-2">
+                            {pedido.items.map((item, index) => (
+                              <div 
+                                key={item.itemPedidoId || `item-${pedido.pedidoID}-${index}`} 
+                                className="flex justify-between items-center bg-white p-3 rounded-md"
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
+                                  <p className="text-xs text-gray-500">
+                                    ${item.precioUnitario.toFixed(2)} x {item.cantidad}
                                   </p>
                                 </div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  ${item.subtotal.toFixed(2)}
+                                </p>
                               </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Subtotal:</span>
+                              <span className="text-gray-900">${pedido.subtotalItems.toFixed(2)}</span>
                             </div>
-                            
-                            <div className="bg-blue-50 p-2 rounded">
-                              <div className="flex items-center">
-                                <span className="text-blue-600 mr-1">⏱️</span>
-                                <div>
-                                  <p className="font-medium text-blue-800">Tiempo</p>
-                                  <p className="text-blue-600">
-                                    {vendedor.datosLogisticos.tiempoEstimado} min
-                                  </p>
-                                </div>
-                              </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Envío:</span>
+                              <span className="text-gray-900">${Number(pedido.costoEnvio).toFixed(2)}</span>
                             </div>
-                            
-                            <div className="bg-orange-50 p-2 rounded col-span-2">
-                              <div className="flex items-center">
-                                <span className="text-orange-600 mr-1">💰</span>
-                                <div>
-                                  <p className="font-medium text-orange-800">Costo de Envío</p>
-                                  <p className="text-orange-600 font-bold">
-                                    ${vendedor.datosLogisticos.costoEnvio.toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
+                            <div className="flex justify-between text-base font-semibold border-t border-gray-200 pt-2 mt-2">
+                              <span className="text-gray-900">Total:</span>
+                              <span className="text-gray-900">${pedido.precio.toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
                       )}
-                      
-                      <div className="mt-4">
-                        <button
-                          onClick={() => handleVerMenu(vendedor)}
-                          className="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          Ver Menú
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
             {/* Stats Footer */}
-            {vendedores.length > 0 && (
-              <div className="mt-8 text-center">
+            {pedidosEnCurso.length > 0 && (
+              <div className="mt-6 text-center">
                 <p className="text-gray-500">
-                  ¡{vendedores.length} restaurante{vendedores.length !== 1 ? 's' : ''} disponible{vendedores.length !== 1 ? 's' : ''} en tu zona!
+                  {pedidosEnCurso.length} pedido{pedidosEnCurso.length !== 1 ? 's' : ''} en curso
                 </p>
               </div>
             )}
