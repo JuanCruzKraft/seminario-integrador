@@ -1,18 +1,5 @@
 import { API_CONFIG } from '@/constants/api'
-
-export interface EstadoPedidoResponse {
-  pedidoId: number
-  estado: string
-  estadoTexto: string
-  tiempoRestante: number
-  tiempoTotal: number
-  progreso: number
-  siguienteEstado: string
-  resultado: {
-    status: number
-    mensaje: string
-  }
-}
+import { EstadoPedidoResponse, VerPedidosResponseDTO } from '@/types/pedido'
 
 export const pedidoService = {
   async obtenerEstadoPedido(pedidoId: number): Promise<EstadoPedidoResponse> {
@@ -23,6 +10,32 @@ export const pedidoService = {
     
     if (!response.ok) {
       throw new Error('Error al obtener el estado del pedido')
+    }
+    
+    return response.json()
+  },
+
+  async verHistorialPedidos(): Promise<VerPedidosResponseDTO> {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/pedido/historial`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    
+    if (!response.ok) {
+      throw new Error('Error al obtener el historial de pedidos')
+    }
+    
+    return response.json()
+  },
+
+  async verPedidosEnCurso(): Promise<VerPedidosResponseDTO> {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/pedido/curso`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    
+    if (!response.ok) {
+      throw new Error('Error al obtener los pedidos en curso')
     }
     
     return response.json()
