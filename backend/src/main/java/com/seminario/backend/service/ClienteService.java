@@ -12,6 +12,7 @@ import com.seminario.backend.model.Cliente;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.repository.ClienteRepository;
 import com.seminario.backend.sesion.SesionMockeada;
+import com.seminario.backend.utils.Validador;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Null;
@@ -52,6 +53,20 @@ public class ClienteService {
 
     public RegistrarClienteResponseDTO registrarCliente(@Valid RegistrarClienteRequestDTO request) {
         RegistrarClienteResponseDTO response = new RegistrarClienteResponseDTO();
+        
+        // Validar formato del email
+        if (!Validador.validarEmail(request.getEmail())) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "El formato del email no es válido.";
+            return response;
+        }
+        
+        // Validar contraseña
+        if (!Validador.validarPassword(request.getPassword())) {
+            response.resultado.status = 1;
+            response.resultado.mensaje = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un dígito y no puede contener espacios.";
+            return response;
+        }
     
         if(clienteRepository.existsByUsername(request.getUsername())) {
             response.resultado.status= 1;

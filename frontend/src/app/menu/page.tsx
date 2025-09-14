@@ -466,7 +466,7 @@ export default function MenuPage() {
                               <div className="block text-sm font-medium text-gray-700"> <u>Graduación Alcohólica</u>: {item.graduacionAlcoholica}%</div>
                             </>
                           ) : (
-                            <div className="block text-sm font-medium text-gray-700"><u>Calorías</u>: {item.calorias}</div>
+                            <div className="block text-sm font-medium text-gray-700"><u>KiloCalorías</u>: {item.calorias}</div>
                           )}
                         </div>
                       <div className="flex items-center justify-between">

@@ -95,7 +95,7 @@ public class CarritoService {
         if(carrito.getVendedor().getVendedorid() != item.getVendedor().getVendedorid()) {
             // El vendedor del carrito no coincide con el vendedor del itemMenu
             // deberia dejarle opc al cliente de crear un nuevo carrito con el vendedor correcto, eliminando el actual
-            response.resultado.setMensaje("El vendedor del carrito no coincide con el vendedor del itemMenu");
+            response.resultado.setMensaje("Ya tiene un carrito activo con: " + carrito.getVendedor().getNombre() + " Elimine o Confirme este carrito antes de proceder");
             response.resultado.setStatus(1); //ver que numero poner.
             return response;
         }
@@ -108,7 +108,7 @@ public class CarritoService {
                 //itemMenuRepository.save(itemMenuRepository.findById(request.itemMenuId).get());
             } else {
                 response.resultado.setMensaje("No se pudo actualizar la cantidad del item en el carrito");
-                response.resultado.setStatus(1);//ver que numero poner.
+                response.resultado.setStatus(10);//ver que numero poner.
             }
             return response;
         
