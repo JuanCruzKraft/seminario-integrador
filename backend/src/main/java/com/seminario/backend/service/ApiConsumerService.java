@@ -11,6 +11,7 @@ import com.seminario.backend.dto.request.cliente.EstablecerDireccionClienteReque
 import com.seminario.backend.dto.response.cliente.EstablecerDireccionClienteResponseDTO;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.sesion.SesionMockeada;
+import com.seminario.backend.utils.Validador;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -133,53 +134,26 @@ public Coordenada obtenerCoordenadas(String direccion) {
     return new Coordenada(lat, lon); 
 }
 
+    // // Validación de email mejorada usando la clase Validador
+    // // En el front se debería validar con: <input type="email" id="email" name="email" required>
+    // public boolean validarEmail(String email) {
+    //     return Validador.validarEmail(email);
+    // }
 
+    // // Validación de contraseña usando la clase Validador
+    // public boolean validarPassword(String password) {
+    //     return Validador.validarPassword(password);
+    // }
 
-    // ver si sirve algo de esto, si no borrar
-
-    // este service se va a encargar de las validaciones de los ""ssistemas externos"" que se van a consumir
-
-    //esta se va a usar para registrar un cliente
-    public Boolean validarcontrasena(String contrasena) {
-
-        // Asumimos que el servicio externo hace una validacion asi:
-        // Longitud mínima de 8 caracteres
-        if (contrasena.length() < 8)
-            return false;
-
-        // Al menos un signo especial (@#$%*)
-        if (!contrasena.matches(".*[@#$%*].*"))
-            return false;
-
-        // Al menos una letra mayúscula
-        if (!contrasena.matches(".*[A-Z].*"))
-            return false;
-
-        // Al menos un dígito
-        if (!contrasena.matches(".*\\d.*"))
-            return false;
-
-        return true;
-    }
-
-    //esta validacion no se si es necesaria (no esta de mas, de todos modos )
-    //en el front se deberia validar con: <input type="email" id="email" name="email" required>
-    public boolean validarEmail(String email) {
-        // Asumimos que el servicio externo valida el email con una expresión regular
-        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-        return email.matches(emailRegex);
-    }
-
-    public String obtenerRequisitosContrasena() {
-        return """
-                <p>La contraseña debe cumplir los siguientes requisitos:</p>
-                <ul>
-                    <li>Longitud mínima de 8 caracteres</li>
-                    <li>Debe contener al menos un signo especial (@#$%*)</li>
-                    <li>Debe contener al menos una letra mayúscula</li>
-                    <li>Debe contener al menos un dígito</li>
-                </ul>
-                """;
-    }
-
+    // public String obtenerRequisitosContrasena() {
+    //     return """
+    //             <p>La contraseña debe cumplir los siguientes requisitos:</p>
+    //             <ul>
+    //                 <li>Mínimo 8 caracteres</li>
+    //                 <li>Al menos una letra mayúscula</li>
+    //                 <li>Al menos un dígito</li>
+    //                 <li>Sin espacios</li>
+    //             </ul>
+    //             """;
+    // }
 }
