@@ -1,6 +1,7 @@
 package com.seminario.backend.service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,13 +31,15 @@ public class PagoService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final SesionMockeada sesion;
     private final PedidoService pedidoService;
+    private final EnvioService envioService;
 
-    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, ItemPedidoRepository itemPedidoRepository, SesionMockeada sesion, PedidoService pedidoService) {
+    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, ItemPedidoRepository itemPedidoRepository, SesionMockeada sesion, PedidoService pedidoService, EnvioService envioService) {
         this.pedidoRepository = pedidoRepository;
         this.pagoRepository = pagoRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.sesion = sesion;
         this.pedidoService = pedidoService;
+        this.envioService = envioService;
     }
     
     @Transactional
@@ -70,16 +73,31 @@ public class PagoService {
                 return response;
             }
 
-            // Calcular el precio final según el método de pago
-            double subtotalTotal = carrito.getSubTotal_Total() != null ? carrito.getSubTotal_Total() : 0.0;
+            // Calcular subtotal de items y costo de envío
+            Set<ItemPedido> items = itemPedidoRepository.findByPedido(carrito);
+            double subtotalItems = items.stream().mapToDouble(ItemPedido::getSubtotal).sum();
+            
+            // Obtener o calcular el costo de envío
+            Double costoEnvio = carrito.getCostoEnvio();
+            if (costoEnvio == null && carrito.getDistanciaEnvio() > 0){
+                costoEnvio = envioService.calcularCostoEnvio(carrito.getDistanciaEnvio());
+                carrito.setCostoEnvio(costoEnvio);
+            } else if (costoEnvio == null) {
+                costoEnvio = 0.0; // Si no hay datos de envío
+            }
+            
+            // Calcular precio final según el método de pago
             double precioFinal;
+            double recargo = 0.0;
             
             if (request.getMetodoPago() == MetodoPago.TARJETA_CREDITO) {
-                // Tarjeta de crédito: subtotal + 10%
-                precioFinal = subtotalTotal * 1.10;
+                // Tarjeta de crédito: (subtotal + envío) + 10%
+                double baseTotal = subtotalItems + costoEnvio;
+                recargo = baseTotal * 0.10;
+                precioFinal = baseTotal + recargo;
             } else {
-                // Débito y transferencia: sin recargo
-                precioFinal = subtotalTotal;
+                // Débito y transferencia: subtotal + envío (sin recargo)
+                precioFinal = subtotalItems + costoEnvio;
             }
             
             // Actualizar el precio final del pedido
@@ -109,13 +127,17 @@ public class PagoService {
             System.out.println("Fecha de confirmación: " + pedidoGuardado.getFechaConfirmacion());
             
             // Configurar la respuesta
+            response.setSubtotal(subtotalItems);
+            response.setCostoEnvio(costoEnvio);
+            response.setRecargo(recargo);
             response.setTotal(precioFinal);
             response.setItems(convertirItemsADTO(carrito));
             response.setVendedorId(carrito.getVendedor().getVendedorid());
             response.setVendedorNombre(carrito.getVendedor().getNombre());
             response.setVendedorCuit(carrito.getVendedor().getCuit());
             response.setVendedorCbu(carrito.getVendedor().getCbu());
-            response.setPedidoId(pedidoGuardado.getPedidoid()); // Agregar ID del pedido
+            response.setMetodoPago(request.getMetodoPago());
+            response.setPedidoId(pedidoGuardado.getPedidoid());
             response.resultado.setStatus(0);
             response.resultado.setMensaje("Pago procesado exitosamente. Pedido confirmado.");
             
@@ -142,22 +164,35 @@ public class PagoService {
                 return response;
             }
             
-            // Calcular el precio final según el método de pago (solo para mostrar en la respuesta)
-            double subtotalTotal = carrito.getSubTotal_Total() != null ? carrito.getSubTotal_Total() : 0.0;
-            double recargo = 0.0;
+            // Calcular subtotal de items y costo de envío
+            Set<ItemPedido> items = itemPedidoRepository.findByPedido(carrito);
+            double subtotalItems = items.stream().mapToDouble(ItemPedido::getSubtotal).sum();
+            
+            // Obtener o calcular el costo de envío
+            Double costoEnvio = carrito.getCostoEnvio();
+            if (costoEnvio == null && carrito.getDistanciaEnvio() > 0) {
+                costoEnvio = envioService.calcularCostoEnvio(carrito.getDistanciaEnvio());
+            } else if (costoEnvio == null) {
+                costoEnvio = 0.0; // Si no hay datos de envío
+            }
+            
+            // Calcular precio final según el método de pago (solo para mostrar en la respuesta)
             double precioFinal;
+            double recargo = 0.0;
             
             if (metodoPago == MetodoPago.TARJETA_CREDITO) {
-                // Tarjeta de crédito: subtotal + 10%
-                recargo = subtotalTotal * 0.10;
-                precioFinal = subtotalTotal + recargo;
+                // Tarjeta de crédito: (subtotal + envío) + 10%
+                double baseTotal = subtotalItems + costoEnvio;
+                recargo = baseTotal * 0.10;
+                precioFinal = baseTotal + recargo;
             } else {
-                // Débito y transferencia: sin recargo
-                precioFinal = subtotalTotal;
+                // Débito y transferencia: subtotal + envío (sin recargo)
+                precioFinal = subtotalItems + costoEnvio;
             }
             
             // Configurar la respuesta
-            response.setSubtotal(subtotalTotal);
+            response.setSubtotal(subtotalItems);
+            response.setCostoEnvio(costoEnvio);
             response.setRecargo(recargo);
             response.setTotal(precioFinal);
             response.setItems(convertirItemsADTO(carrito));
@@ -216,6 +251,11 @@ public class PagoService {
             return "La fecha de vencimiento es obligatoria";
         }
         
+        // Validar que la fecha de vencimiento no sea pasada
+        if (!validarFechaVencimiento(request.getFechaVencimiento())) {
+            return "La fecha de vencimiento debe ser mayor a la fecha actual";
+        }
+        
         if (request.getCodigoSeguridad() == null || request.getCodigoSeguridad().trim().isEmpty()) {
             return "El código de seguridad es obligatorio";
         }
@@ -228,6 +268,34 @@ public class PagoService {
         // porque va a transferir AL vendedor, no recibir dinero
         // Solo validamos que tenga observaciones si fuera necesario (opcional)
         return null; // Validación exitosa - no se requieren datos adicionales
+    }
+    
+    private boolean validarFechaVencimiento(String fechaVencimiento) {
+        try {
+            // Formato esperado: MM/AA
+            if (!fechaVencimiento.matches("\\d{2}/\\d{2}")) {
+                return false;
+            }
+            
+            String[] partes = fechaVencimiento.split("/");
+            int mes = Integer.parseInt(partes[0]);
+            int año = Integer.parseInt("20" + partes[1]); // Asumimos 20XX
+            
+            // Validar mes válido
+            if (mes < 1 || mes > 12) {
+                return false;
+            }
+            
+            LocalDateTime ahora = LocalDateTime.now();
+            int mesActual = ahora.getMonthValue();
+            int añoActual = ahora.getYear();
+            
+            // La tarjeta debe vencer en el futuro (mes siguiente o año posterior)
+            return (año > añoActual) || (año == añoActual && mes > mesActual);
+            
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     private boolean procesarMetodoPago(ConfirmarCarritoRequestDTO request) {
@@ -396,63 +464,198 @@ public class PagoService {
             com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
             com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf);
             
+            // Formatter para fecha y hora
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm");
+            
+            // Intentar agregar el logo
+            try {
+                String logoPath = "src/main/resources/static/Logo.png";
+                java.io.File logoFile = new java.io.File(logoPath);
+                if (logoFile.exists()) {
+                    com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(logoPath);
+                    com.itextpdf.layout.element.Image logo = new com.itextpdf.layout.element.Image(imageData);
+                    logo.setWidth(60);
+                    logo.setHeight(60);
+                    logo.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.LEFT);
+                    document.add(logo);
+                    
+                    // Agregar el nombre de la empresa junto al logo
+                    document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
+                            .setFontSize(20)
+                            .setBold()
+                            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
+                    document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                }
+            } catch (Exception e) {
+                // Si no se puede cargar el logo, continuar sin él
+                System.out.println("No se pudo cargar el logo: " + e.getMessage());
+            }
+            
             // Agregar contenido al PDF
-            document.add(new com.itextpdf.layout.element.Paragraph("RESUMEN DE PEDIDO #" + pedidoId)
+            document.add(new com.itextpdf.layout.element.Paragraph("COMPROBANTE DE PAGO")
                     .setFontSize(18)
-                    .setBold());
+                    .setBold()
+                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            
+            // Número de recibo (basado en el ID del pedido)
+            document.add(new com.itextpdf.layout.element.Paragraph("Recibo N° " + String.format("%08d", pedidoId))
+                    .setFontSize(14)
+                    .setBold()
+                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            
+            // Fecha y hora actual formateada
+            String fechaHoraActual = LocalDateTime.now().format(formatter);
+            document.add(new com.itextpdf.layout.element.Paragraph("Fecha: " + fechaHoraActual)
+                    .setFontSize(12)
+                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT));
             
             document.add(new com.itextpdf.layout.element.Paragraph("\n"));
             
             Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
             if (pedido != null) {
-                // Información del pedido
-                document.add(new com.itextpdf.layout.element.Paragraph("INFORMACIÓN DEL PEDIDO")
+                // Datos del Cliente
+                document.add(new com.itextpdf.layout.element.Paragraph("DATOS DEL CLIENTE:")
                         .setFontSize(14)
                         .setBold());
                 
-                document.add(new com.itextpdf.layout.element.Paragraph("Vendedor: " + pedido.getVendedor().getNombre()));
-                document.add(new com.itextpdf.layout.element.Paragraph("Cliente: " + pedido.getCliente().getNombre()));
-                document.add(new com.itextpdf.layout.element.Paragraph("Fecha: " + pedido.getFechaConfirmacion()));
+                document.add(new com.itextpdf.layout.element.Paragraph("Nombre: " + pedido.getCliente().getNombre() + " " + pedido.getCliente().getApellido())
+                        .setFontSize(12)
+                        .setMarginLeft(20));
+                document.add(new com.itextpdf.layout.element.Paragraph("CUIT: " + pedido.getCliente().getCuit())
+                        .setFontSize(12)
+                        .setMarginLeft(20));
+                document.add(new com.itextpdf.layout.element.Paragraph("Email: " + pedido.getCliente().getEmail())
+                        .setFontSize(12)
+                        .setMarginLeft(20));
+                
+                document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                
+                // Dirección de entrega (usar dirección del cliente)
+                String direccionEntrega = pedido.getCliente().getDireccion() != null ? 
+                    pedido.getCliente().getDireccion() : "No especificada";
+                document.add(new com.itextpdf.layout.element.Paragraph("Dirección de Entrega: " + direccionEntrega)
+                        .setFontSize(12)
+                        .setBold());
+                
+                // Información del vendedor
+                document.add(new com.itextpdf.layout.element.Paragraph("Vendedor: " + pedido.getVendedor().getNombre())
+                        .setFontSize(12));
                 
                 document.add(new com.itextpdf.layout.element.Paragraph("\n"));
                 
                 // Items del pedido
-                document.add(new com.itextpdf.layout.element.Paragraph("ITEMS DEL PEDIDO")
+                document.add(new com.itextpdf.layout.element.Paragraph("DETALLES DEL PEDIDO:")
                         .setFontSize(14)
                         .setBold());
                 
                 Set<ItemPedido> items = itemPedidoRepository.findByPedido(pedido);
-                double totalItems = 0;
+                double subtotal = 0;
                 
                 for (ItemPedido item : items) {
-                    String lineaItem = item.getCantidad() + "x " + item.getItemMenu().getNombre() + 
-                                     " - $" + String.format("%.2f", item.getSubtotal());
-                    document.add(new com.itextpdf.layout.element.Paragraph(lineaItem));
-                    totalItems += item.getSubtotal();
+                    String lineaItem = item.getCantidad() + " x " + item.getItemMenu().getNombre() + 
+                                     " - $" + String.format("%.2f", item.getItemMenu().getPrecio()) +
+                                     " c/u = $" + String.format("%.2f", item.getSubtotal());
+                    document.add(new com.itextpdf.layout.element.Paragraph(lineaItem)
+                            .setFontSize(10)
+                            .setMarginLeft(20));
+                    subtotal += item.getSubtotal();
                 }
                 
                 document.add(new com.itextpdf.layout.element.Paragraph("\n"));
                 
-                // Información de pago
+                // Información de pago y costos
                 List<Pago> pagos = pagoRepository.findByPedidoPedidoid(pedido.getPedidoid());
                 if (!pagos.isEmpty()) {
                     Pago pago = pagos.get(0);
                     
-                    document.add(new com.itextpdf.layout.element.Paragraph("INFORMACIÓN DE PAGO")
+                    document.add(new com.itextpdf.layout.element.Paragraph("DESGLOSE DE COSTOS:")
                             .setFontSize(14)
                             .setBold());
                     
-                    document.add(new com.itextpdf.layout.element.Paragraph("Método de pago: " + pago.getMetodoPago()));
-                    document.add(new com.itextpdf.layout.element.Paragraph("Estado del pago: " + pago.getEstado()));
+                    document.add(new com.itextpdf.layout.element.Paragraph(String.format("Subtotal: $%.2f", subtotal))
+                            .setFontSize(12)
+                            .setMarginLeft(20));
+                    
+                    // Calcular costo de envío desde el servicio
+                    Double costoEnvio = 0.0;
+                    try {
+                        if (pedido.getDistanciaEnvio() > 0) {
+                            costoEnvio = envioService.calcularCostoEnvio(pedido.getDistanciaEnvio());
+                        }
+                    } catch (Exception e) {
+                        // Si hay error calculando envío, usar valor por defecto
+                        costoEnvio = 300.0;
+                    }
+                    
+                    document.add(new com.itextpdf.layout.element.Paragraph(String.format("Costo de Envío: $%.2f", costoEnvio))
+                            .setFontSize(12)
+                            .setMarginLeft(20));
+                    
+                    // Si es tarjeta de crédito, mostrar recargo
+                    String metodoPagoTexto = "";
+                    if ("CREDITO".equals(pago.getMetodoPago().toString())) {
+                        double recargoCredito = (subtotal + costoEnvio) * 0.05;
+                        document.add(new com.itextpdf.layout.element.Paragraph(String.format("Recargo Tarjeta de Crédito (5%%): $%.2f", recargoCredito))
+                                .setFontSize(12)
+                                .setMarginLeft(20));
+                        metodoPagoTexto = "Tarjeta de Crédito";
+                    } else if ("DEBITO".equals(pago.getMetodoPago().toString())) {
+                        metodoPagoTexto = "Tarjeta de Débito";
+                    } else if ("EFECTIVO".equals(pago.getMetodoPago().toString())) {
+                        metodoPagoTexto = "Efectivo";
+                    } else if ("TRANSFERENCIA".equals(pago.getMetodoPago().toString())) {
+                        metodoPagoTexto = "Transferencia Bancaria";
+                    } else {
+                        metodoPagoTexto = pago.getMetodoPago().toString();
+                    }
+                    
+                    // Total final
+                    document.add(new com.itextpdf.layout.element.Paragraph(String.format("TOTAL FINAL: $%.2f", pago.getMonto()))
+                            .setFontSize(14)
+                            .setBold()
+                            .setMarginLeft(20));
                     
                     document.add(new com.itextpdf.layout.element.Paragraph("\n"));
-                    document.add(new com.itextpdf.layout.element.Paragraph("TOTAL: $" + String.format("%.2f", pago.getMonto()))
-                            .setFontSize(16)
+                    
+                    // Método de pago
+                    document.add(new com.itextpdf.layout.element.Paragraph("Método de Pago: " + metodoPagoTexto)
+                            .setFontSize(12)
                             .setBold());
+                    
+                    document.add(new com.itextpdf.layout.element.Paragraph("Estado del Pago: " + pago.getEstado())
+                            .setFontSize(12));
                 }
             } else {
                 document.add(new com.itextpdf.layout.element.Paragraph("Pedido no encontrado"));
             }
+            
+            // Agregar footer con logo
+            document.add(new com.itextpdf.layout.element.Paragraph("\n\n"));
+            document.add(new com.itextpdf.layout.element.Paragraph("──────────────────────────────────────────────────────────")
+                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
+                    .setFontSize(10));
+            
+            // Intentar agregar el logo en el footer
+            try {
+                String logoPath = "src/main/resources/static/Logo.png";
+                java.io.File logoFile = new java.io.File(logoPath);
+                if (logoFile.exists()) {
+                    com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(logoPath);
+                    com.itextpdf.layout.element.Image logo = new com.itextpdf.layout.element.Image(imageData);
+                    logo.setWidth(30);
+                    logo.setHeight(30);
+                    logo.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.LEFT);
+                    document.add(logo);
+                }
+            } catch (Exception e) {
+                // Si no se puede cargar el logo, continuar sin él
+                System.out.println("No se pudo cargar el logo en el footer: " + e.getMessage());
+            }
+            
+            document.add(new com.itextpdf.layout.element.Paragraph("SantaFood - Tu plataforma de delivery de confianza")
+                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT)
+                    .setFontSize(10)
+                    .setItalic());
             
             // Cerrar documento
             document.close();

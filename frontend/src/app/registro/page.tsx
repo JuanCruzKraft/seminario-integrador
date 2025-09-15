@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { AuthService } from '@/services/authService' // ✅ Usar el servicio
 import { RegistrarClienteResponse, RegistrarClienteRequest } from '@/types/auth' // ✅ Importar el tipo de respuesta
 
@@ -20,13 +21,14 @@ export default function RegistroPage() {
   const [formData, setFormData] = useState<RegistrarClienteRequest>({
     nombre: '',
     apellido: '',
-    cuit: '',
+    cuit: 0,
     email: '',
     direccion: '',
     username: '',
     password: '',
     confirmarPassword: ''
   })
+  const [cuitInput, setCuitInput] = useState('') // Estado separado para el input del CUIT
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -48,7 +50,7 @@ export default function RegistroPage() {
       const data: RegistrarClienteResponse = await AuthService.register({
         nombre: formData.nombre,
         apellido: formData.apellido,
-        cuit: parseInt(formData.cuit),
+        cuit: parseInt(cuitInput) || 0,
         email: formData.email,
         direccion: '',
         username: formData.username,
@@ -79,14 +81,29 @@ export default function RegistroPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    if (e.target.name === 'cuit') {
+      setCuitInput(e.target.value)
+    } else {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value
+      })
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      {/* Logo en esquina superior izquierda */}
+      <div className="fixed top-4 left-4 z-50">
+        <Image
+          src="/Logo.png"
+          alt="Logo"
+          width={50}
+          height={50}
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+        />
+      </div>
+
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -154,7 +171,7 @@ export default function RegistroPage() {
                 maxLength={11}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="12345678901"
-                value={formData.cuit}
+                value={cuitInput}
                 onChange={handleChange}
               />
             </div>

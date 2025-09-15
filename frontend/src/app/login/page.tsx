@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { AuthService } from '@/services/authService'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState({
@@ -54,6 +55,17 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
+        {/* Logo centrado en login */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/Logo.png"
+            alt="Logo"
+            width={80}
+            height={80}
+            className="object-contain"
+          />
+        </div>
+        
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Iniciar Sesión

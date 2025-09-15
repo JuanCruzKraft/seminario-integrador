@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { API_CONFIG } from "@/constants/api";
 import { usePedidoTracking } from "@/hooks/usePedidoTracking";
 
@@ -89,6 +90,17 @@ export default function PagoResumenPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
+      {/* Logo en esquina superior izquierda */}
+      <div className="fixed top-4 left-4 z-50">
+        <Image
+          src="/Logo.png"
+          alt="Logo"
+          width={50}
+          height={50}
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+        />
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-3xl flex flex-col md:flex-row gap-8">
         {/* Lado Izquierdo: Resumen y volver */}
         <div className="flex-1 flex flex-col justify-between">
