@@ -10,6 +10,7 @@ public class ConfirmarCarritoResponseDTO {
      private Double total;
      private Double subtotal;
      private Double recargo;
+     private Double costoEnvio;
      private List<ItemPedidoDTO> items;
      private List<MetodoPago> metodosDisponibles;
      private MetodoPago metodoPago; // Método de pago utilizado
@@ -95,6 +96,14 @@ public class ConfirmarCarritoResponseDTO {
 
      public void setRecargo(Double recargo) {
          this.recargo = recargo;
+     }
+
+     public Double getCostoEnvio() {
+         return costoEnvio;
+     }
+
+     public void setCostoEnvio(Double costoEnvio) {
+         this.costoEnvio = costoEnvio;
      }
 
      public Integer getTiempoEnvio() {

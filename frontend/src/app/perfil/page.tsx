@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { ApiService } from '@/services/api'
 import { API_ENDPOINTS } from '@/constants/api'
@@ -71,6 +72,17 @@ export default function PerfilPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Logo en esquina superior izquierda */}
+      <div className="fixed top-4 left-4 z-50">
+        <Image
+          src="/Logo.png"
+          alt="Logo"
+          width={50}
+          height={50}
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+        />
+      </div>
+
       {/* Header */}
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

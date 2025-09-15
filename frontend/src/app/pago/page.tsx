@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { API_CONFIG } from '@/constants/api';
 import { MetodoPago } from '@/types/carrito';
 
@@ -21,6 +22,7 @@ interface PrepararPagoResponse {
   vendedorCbu: string;
   items: PedidoItem[];
   subtotal: number;
+  costoEnvio: number;
   recargo: number;
   total: number;
   metodosDisponibles: string[];
@@ -250,6 +252,17 @@ export default function PagoPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
+      {/* Logo en esquina superior izquierda */}
+      <div className="fixed top-4 left-4 z-50">
+        <Image
+          src="/Logo.png"
+          alt="Logo"
+          width={50}
+          height={50}
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+        />
+      </div>
+      
       <style jsx>{`
         form[data-payment-form] input:-webkit-autofill {
           -webkit-box-shadow: 0 0 0 1000px white inset !important;
@@ -343,6 +356,10 @@ export default function PagoPage() {
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
                       <span>{formatCurrency(paymentInfo.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Costo de Envío:</span>
+                      <span>+{formatCurrency(paymentInfo.costoEnvio || 0)}</span>
                     </div>
                     {paymentInfo.recargo > 0 && (
                       <div className="flex justify-between text-red-600">
@@ -569,7 +586,7 @@ export default function PagoPage() {
                         disabled={loading}
                         className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
-                        {loading ? 'Procesando...' : '✓ Ya Pagué'}
+                        {loading ? 'Procesando...' : '✓ Confirmar pago'}
                       </button>
                     </div>
                   </div>
