@@ -10,6 +10,7 @@ public class ConfirmarCarritoRequestDTO {
     // Datos específicos para cada método de pago (podrías separar en clases diferentes)
     private String numeroTarjeta;
     private String nombreTitular;
+    private String dniTitular; // Campo nuevo para DNI del titular
     private String fechaVencimiento;
     private String codigoSeguridad;
     
@@ -55,6 +56,14 @@ public class ConfirmarCarritoRequestDTO {
     
     public void setNombreTitular(String nombreTitular) {
         this.nombreTitular = nombreTitular;
+    }
+    
+    public String getDniTitular() {
+        return dniTitular;
+    }
+    
+    public void setDniTitular(String dniTitular) {
+        this.dniTitular = dniTitular;
     }
     
     public String getFechaVencimiento() {

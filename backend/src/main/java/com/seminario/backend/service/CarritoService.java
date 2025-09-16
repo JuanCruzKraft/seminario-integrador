@@ -200,7 +200,6 @@ public class CarritoService {
             response.resultado.setStatus(0);
             response.subtotalTotal = subtotalItemsPedido + response.costoEnvio;
             response.direccionEntrega = carrito.getCliente().getDireccion();
-            pedido.setSubTotal_Total= response.subtotalTotal;
 
         } else {
             response.resultado.setMensaje("Carrito no encontrado");

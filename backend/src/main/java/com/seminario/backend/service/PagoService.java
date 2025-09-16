@@ -17,9 +17,15 @@ import com.seminario.backend.enums.EstadoPedido;
 import com.seminario.backend.enums.MetodoPago;
 import com.seminario.backend.model.ItemPedido;
 import com.seminario.backend.model.Pago;
+import com.seminario.backend.model.PagoCredito;
+import com.seminario.backend.model.PagoDebito;
+import com.seminario.backend.model.PagoTransferencia;
 import com.seminario.backend.model.Pedido;
 import com.seminario.backend.repository.ItemPedidoRepository;
 import com.seminario.backend.repository.PagoRepository;
+import com.seminario.backend.repository.PagoCreditoRepository;
+import com.seminario.backend.repository.PagoDebitoRepository;
+import com.seminario.backend.repository.PagoTransferenciaRepository;
 import com.seminario.backend.repository.PedidoRepository;
 import com.seminario.backend.sesion.SesionMockeada;
 
@@ -28,14 +34,23 @@ public class PagoService {
     
     private final PedidoRepository pedidoRepository;
     private final PagoRepository pagoRepository;
+    private final PagoCreditoRepository pagoCreditoRepository;
+    private final PagoDebitoRepository pagoDebitoRepository;
+    private final PagoTransferenciaRepository pagoTransferenciaRepository;
     private final ItemPedidoRepository itemPedidoRepository;
     private final SesionMockeada sesion;
     private final PedidoService pedidoService;
     private final EnvioService envioService;
 
-    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, ItemPedidoRepository itemPedidoRepository, SesionMockeada sesion, PedidoService pedidoService, EnvioService envioService) {
+    public PagoService(PedidoRepository pedidoRepository, PagoRepository pagoRepository, 
+                      PagoCreditoRepository pagoCreditoRepository, PagoDebitoRepository pagoDebitoRepository, 
+                      PagoTransferenciaRepository pagoTransferenciaRepository, ItemPedidoRepository itemPedidoRepository, 
+                      SesionMockeada sesion, PedidoService pedidoService, EnvioService envioService) {
         this.pedidoRepository = pedidoRepository;
         this.pagoRepository = pagoRepository;
+        this.pagoCreditoRepository = pagoCreditoRepository;
+        this.pagoDebitoRepository = pagoDebitoRepository;
+        this.pagoTransferenciaRepository = pagoTransferenciaRepository;
         this.itemPedidoRepository = itemPedidoRepository;
         this.sesion = sesion;
         this.pedidoService = pedidoService;
@@ -114,7 +129,10 @@ public class PagoService {
             pago.setResumen(generarResumenPago(request, precioFinal));
             
             // Guardar el pago
-            pagoRepository.save(pago);
+            Pago pagoGuardado = pagoRepository.save(pago);
+            
+            // Guardar los datos específicos según el método de pago
+            guardarDatosEspecificosPago(pagoGuardado, request, precioFinal, recargo);
             
             // Actualizar el estado del pedido
             System.out.println("Estado del pedido antes del pago: " + carrito.getEstado());
@@ -422,6 +440,10 @@ public class PagoService {
             double subtotal = response.getItems().stream().mapToDouble(item -> item.subtotal).sum();
             response.setSubtotal(subtotal);
             
+            // Obtener costo de envío del pedido (ya está seteado en el pedido)
+            double costoEnvio = pedido.getCostoEnvio();
+            response.setCostoEnvio(costoEnvio);
+            
             // Obtener información del pago para calcular recargo y método de pago
             List<Pago> pagos = pagoRepository.findByPedidoPedidoid(pedido.getPedidoid());
             if (!pagos.isEmpty()) {
@@ -429,7 +451,9 @@ public class PagoService {
                 response.setMetodoPago(metodoPago);
                 
                 if (metodoPago == MetodoPago.TARJETA_CREDITO) {
-                    response.setRecargo(subtotal * 0.10); // 10% de recargo
+                    // El recargo se aplica sobre subtotal + envío
+                    double baseTotal = subtotal + costoEnvio;
+                    response.setRecargo(baseTotal * 0.10); // 10% de recargo
                 } else {
                     response.setRecargo(0.0);
                 }
@@ -437,7 +461,8 @@ public class PagoService {
                 response.setRecargo(0.0);
             }
             
-            response.setTotal(subtotal + response.getRecargo());
+            // Total = subtotal + costo envío + recargo
+            response.setTotal(subtotal + costoEnvio + response.getRecargo());
             
             // Usar el tiempo de envío del pedido (ya calculado en CarritoService)
             Integer tiempoEnvio = pedido.getTiempo_envio();
@@ -467,28 +492,95 @@ public class PagoService {
             // Formatter para fecha y hora
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm");
             
-            // Intentar agregar el logo
+            // Intentar agregar el logo y header
             try {
-                String logoPath = "src/main/resources/static/Logo.png";
-                java.io.File logoFile = new java.io.File(logoPath);
-                if (logoFile.exists()) {
-                    com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(logoPath);
-                    com.itextpdf.layout.element.Image logo = new com.itextpdf.layout.element.Image(imageData);
-                    logo.setWidth(60);
-                    logo.setHeight(60);
-                    logo.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.LEFT);
-                    document.add(logo);
+                // Intentar múltiples rutas posibles para el logo
+                String[] logoPaths = {
+                    "src/main/resources/static/Logo.png",
+                    "backend/src/main/resources/static/Logo.png",
+                    "classpath:static/Logo.png"
+                };
+                
+                com.itextpdf.layout.element.Image logo = null;
+                
+                // Probar diferentes rutas
+                for (String path : logoPaths) {
+                    try {
+                        if (path.startsWith("classpath:")) {
+                            // Intentar cargar desde classpath
+                            java.io.InputStream logoStream = getClass().getClassLoader().getResourceAsStream("static/Logo.png");
+                            if (logoStream != null) {
+                                byte[] logoBytes = logoStream.readAllBytes();
+                                com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(logoBytes);
+                                logo = new com.itextpdf.layout.element.Image(imageData);
+                                logoStream.close();
+                                break;
+                            }
+                        } else {
+                            // Intentar cargar desde archivo
+                            java.io.File logoFile = new java.io.File(path);
+                            if (logoFile.exists()) {
+                                com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(path);
+                                logo = new com.itextpdf.layout.element.Image(imageData);
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Continuar probando otras rutas
+                        continue;
+                    }
+                }
+                
+                if (logo != null) {
+                    // Crear una tabla para el header con logo y texto
+                    float[] columnWidths = {1f, 4f}; // Logo ocupa menos espacio que el texto
+                    com.itextpdf.layout.element.Table headerTable = new com.itextpdf.layout.element.Table(columnWidths);
+                    headerTable.setWidth(com.itextpdf.layout.properties.UnitValue.createPercentValue(100));
                     
-                    // Agregar el nombre de la empresa junto al logo
-                    document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
-                            .setFontSize(20)
+                    // Configurar el logo
+                    logo.setWidth(80);
+                    logo.setHeight(80);
+                    
+                    // Celda del logo
+                    com.itextpdf.layout.element.Cell logoCell = new com.itextpdf.layout.element.Cell();
+                    logoCell.add(logo);
+                    logoCell.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+                    logoCell.setVerticalAlignment(com.itextpdf.layout.properties.VerticalAlignment.MIDDLE);
+                    
+                    // Celda del texto de la empresa
+                    com.itextpdf.layout.element.Cell textCell = new com.itextpdf.layout.element.Cell();
+                    textCell.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
+                            .setFontSize(24)
                             .setBold()
                             .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
+                    textCell.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+                    textCell.setVerticalAlignment(com.itextpdf.layout.properties.VerticalAlignment.MIDDLE);
+                    
+                    headerTable.addCell(logoCell);
+                    headerTable.addCell(textCell);
+                    
+                    document.add(headerTable);
+                    document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+                } else {
+                    // Si no se puede cargar el logo, solo mostrar texto
+                    document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
+                            .setFontSize(24)
+                            .setBold()
+                            .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
+                    
                     document.add(new com.itextpdf.layout.element.Paragraph("\n"));
                 }
             } catch (Exception e) {
                 // Si no se puede cargar el logo, continuar sin él
                 System.out.println("No se pudo cargar el logo: " + e.getMessage());
+                document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
+                        .setFontSize(24)
+                        .setBold()
+                        .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
+                document.add(new com.itextpdf.layout.element.Paragraph("Sistema de Delivery")
+                        .setFontSize(12)
+                        .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
+                document.add(new com.itextpdf.layout.element.Paragraph("\n"));
             }
             
             // Agregar contenido al PDF
@@ -677,6 +769,45 @@ public class PagoService {
             } catch (Exception ex) {
                 return ("Error crítico generando PDF: " + ex.getMessage()).getBytes();
             }
+        }
+    }
+
+    /**
+     * Guarda los datos específicos del pago según el método utilizado
+     */
+    private void guardarDatosEspecificosPago(Pago pago, ConfirmarCarritoRequestDTO request, double precioFinal, double recargo) {
+        switch (request.getMetodoPago()) {
+            case TARJETA_CREDITO:
+                PagoCredito pagoCredito = new PagoCredito();
+                pagoCredito.setPago(pago);
+                pagoCredito.setNumeroTarjeta(request.getNumeroTarjeta());
+                pagoCredito.setNombreTitular(request.getNombreTitular());
+                pagoCredito.setDniTitular(request.getDniTitular());
+                pagoCredito.setRecargo(recargo);
+                pagoCredito.setMontoFinal(precioFinal);
+                pagoCreditoRepository.save(pagoCredito);
+                break;
+                
+            case TARJETA_DEBITO:
+                PagoDebito pagoDebito = new PagoDebito();
+                pagoDebito.setPago(pago);
+                pagoDebito.setNumeroTarjeta(request.getNumeroTarjeta());
+                pagoDebito.setNombreTitular(request.getNombreTitular());
+                pagoDebito.setDniTitular(request.getDniTitular());
+                pagoDebito.setMontoFinal(precioFinal);
+                pagoDebitoRepository.save(pagoDebito);
+                break;
+                
+            case TRANSFERENCIA:
+                PagoTransferencia pagoTransferencia = new PagoTransferencia();
+                pagoTransferencia.setPago(pago);
+                pagoTransferencia.setMontoFinal(precioFinal);
+                pagoTransferenciaRepository.save(pagoTransferencia);
+                break;
+                
+            default:
+                System.out.println("Método de pago no soportado: " + request.getMetodoPago());
+                break;
         }
     }
 }
