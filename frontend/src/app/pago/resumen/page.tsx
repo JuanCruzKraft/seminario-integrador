@@ -24,6 +24,7 @@ interface PedidoResumen {
   metodoPago: 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TRANSFERENCIA';
   items: PedidoItem[];
   subtotal: number;
+  costoEnvio: number; // Campo agregado para costo de envío
   recargo: number;
   total: number;
   tiempoEnvio: number; // minutos
@@ -126,6 +127,10 @@ export default function PagoResumenPage() {
             <div className="flex justify-between font-semibold text-gray-900">
               <span>Subtotal:</span>
               <span>${resumen.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-900">
+              <span>Costo de Envío:</span>
+              <span>+${resumen.costoEnvio.toFixed(2)}</span>
             </div>
             {resumen.recargo > 0 && (
               <div className="flex justify-between text-red-600">
