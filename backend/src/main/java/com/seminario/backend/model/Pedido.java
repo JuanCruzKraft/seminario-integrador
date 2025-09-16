@@ -33,7 +33,7 @@ public class Pedido {
     private EstadoPedido estado;
 
     @Column
-    private boolean calificado;
+    private Boolean calificado;
 
     @Column //no deberia ser nullable
     private boolean modificado;
