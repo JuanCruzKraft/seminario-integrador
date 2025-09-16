@@ -64,7 +64,6 @@ public class Pedido {
     @OneToOne(mappedBy = "pedido") //, cascade = CascadeType.ALL)
     private Calificacion calificacion;
 
-    public Double setSubTotal_Total;
 
     public Pedido(Vendedor vendedor, Cliente cliente) {
         this.vendedor = vendedor;

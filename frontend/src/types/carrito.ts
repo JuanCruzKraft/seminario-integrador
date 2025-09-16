@@ -65,3 +65,46 @@ export interface EliminarItemRequest {
 export interface EliminarItemResponse extends BaseResponse {
   // Sin campos adicionales específicos
 }
+
+// Interfaces para pagos
+export interface PagoTarjetaRequest {
+  numeroTarjeta: string;
+  nombreTitular: string;
+  dniTitular: string; // Campo nuevo para DNI del titular
+  fechaVencimiento: string;
+  codigoSeguridad: string;
+  observaciones?: string;
+}
+
+export interface PagoTransferenciaRequest {
+  observaciones?: string;
+}
+
+export interface ConfirmarCarritoRequest {
+  metodoPago: MetodoPago;
+  observaciones?: string;
+  direccionEntrega?: string;
+  // Datos específicos para tarjetas
+  numeroTarjeta?: string;
+  nombreTitular?: string;
+  dniTitular?: string; // Campo nuevo para DNI del titular
+  fechaVencimiento?: string;
+  codigoSeguridad?: string;
+  // Para transferencia
+  cbu?: string;
+  alias?: string;
+}
+
+export interface ConfirmarCarritoResponse extends BaseResponse {
+  subtotal: number;
+  costoEnvio: number;
+  recargo: number;
+  total: number;
+  items: ItemPedidoDTO[];
+  vendedorId: number;
+  vendedorNombre: string;
+  vendedorCuit: string;
+  vendedorCbu: string;
+  metodoPago: MetodoPago;
+  pedidoId: number;
+}

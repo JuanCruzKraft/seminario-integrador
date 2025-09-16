@@ -75,6 +75,7 @@ export default function PagoPage() {
   const [cardData, setCardData] = useState({
     numeroTarjeta: '',
     nombreTitular: '',
+    dniTitular: '', // Campo nuevo para DNI del titular
     fechaVencimiento: '',
     codigoSeguridad: '',
     observaciones: ''
@@ -156,7 +157,7 @@ export default function PagoPage() {
   };
 
   const validateCardForm = (): boolean => {
-    if (!cardData.numeroTarjeta || !cardData.nombreTitular || 
+    if (!cardData.numeroTarjeta || !cardData.nombreTitular || !cardData.dniTitular ||
         !cardData.fechaVencimiento || !cardData.codigoSeguridad) {
       setError('Todos los campos de la tarjeta son obligatorios');
       return false;
@@ -439,6 +440,28 @@ export default function PagoPage() {
                         spellCheck="false"
                         data-form-type="search"
                         role="textbox"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
+                        DNI del Titular *
+                      </label>
+                      <input
+                        type="text"
+                        name="display-dni-field"
+                        value={cardData.dniTitular}
+                        onChange={(e) => setCardData({ ...cardData, dniTitular: e.target.value })}
+                        placeholder="12345678"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autoComplete="one-time-code"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        data-form-type="search"
+                        role="textbox"
+                        pattern="[0-9]*"
+                        maxLength={8}
                       />
                     </div>
 

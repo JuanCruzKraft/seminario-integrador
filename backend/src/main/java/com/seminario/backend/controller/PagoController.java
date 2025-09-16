@@ -40,6 +40,7 @@ public class PagoController {
         ConfirmarCarritoRequestDTO carritoRequest = new ConfirmarCarritoRequestDTO();
         carritoRequest.setNumeroTarjeta(request.getNumeroTarjeta());
         carritoRequest.setNombreTitular(request.getNombreTitular());
+        carritoRequest.setDniTitular(request.getDniTitular()); // Agregar DNI del titular
         carritoRequest.setFechaVencimiento(request.getFechaVencimiento());
         carritoRequest.setCodigoSeguridad(request.getCodigoSeguridad());
         carritoRequest.setObservaciones(request.getObservaciones());
