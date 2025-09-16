@@ -550,7 +550,7 @@ public class PagoService {
                     // Celda del texto de la empresa
                     com.itextpdf.layout.element.Cell textCell = new com.itextpdf.layout.element.Cell();
                     textCell.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
-                            .setFontSize(24)
+                            .setFontSize(48)
                             .setBold()
                             .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
                     textCell.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
@@ -564,7 +564,7 @@ public class PagoService {
                 } else {
                     // Si no se puede cargar el logo, solo mostrar texto
                     document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
-                            .setFontSize(24)
+                            .setFontSize(48)
                             .setBold()
                             .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
                     
@@ -574,7 +574,7 @@ public class PagoService {
                 // Si no se puede cargar el logo, continuar sin él
                 System.out.println("No se pudo cargar el logo: " + e.getMessage());
                 document.add(new com.itextpdf.layout.element.Paragraph("SantaFood")
-                        .setFontSize(24)
+                        .setFontSize(48)
                         .setBold()
                         .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.LEFT));
                 document.add(new com.itextpdf.layout.element.Paragraph("Sistema de Delivery")
@@ -584,16 +584,22 @@ public class PagoService {
             }
             
             // Agregar contenido al PDF
-            document.add(new com.itextpdf.layout.element.Paragraph("COMPROBANTE DE PAGO")
+            Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
+
+            document.add(new com.itextpdf.layout.element.Paragraph("COMPROBANTE DE PAGO - Recibo N° " + String.format("%08d", pedidoId))
                     .setFontSize(18)
                     .setBold()
                     .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            document.add(new com.itextpdf.layout.element.Paragraph( pedido.getVendedor().getNombre())
+                        .setFontSize(24)
+                        .setBold()
+                        .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
             
-            // Número de recibo (basado en el ID del pedido)
-            document.add(new com.itextpdf.layout.element.Paragraph("Recibo N° " + String.format("%08d", pedidoId))
-                    .setFontSize(14)
-                    .setBold()
-                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            // // Número de recibo (basado en el ID del pedido)
+            // document.add(new com.itextpdf.layout.element.Paragraph("Recibo N° " + String.format("%08d", pedidoId))
+            //         .setFontSize(14)
+            //         .setBold()
+            //         .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
             
             // Fecha y hora actual formateada
             String fechaHoraActual = LocalDateTime.now().format(formatter);
@@ -603,8 +609,7 @@ public class PagoService {
             
             document.add(new com.itextpdf.layout.element.Paragraph("\n"));
             
-            Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
-            if (pedido != null) {
+                        if (pedido != null) {
                 // Datos del Cliente
                 document.add(new com.itextpdf.layout.element.Paragraph("DATOS DEL CLIENTE:")
                         .setFontSize(14)
@@ -630,8 +635,8 @@ public class PagoService {
                         .setBold());
                 
                 // Información del vendedor
-                document.add(new com.itextpdf.layout.element.Paragraph("Vendedor: " + pedido.getVendedor().getNombre())
-                        .setFontSize(12));
+                // document.add(new com.itextpdf.layout.element.Paragraph("Vendedor: " + pedido.getVendedor().getNombre())
+                //         .setFontSize(12));
                 
                 document.add(new com.itextpdf.layout.element.Paragraph("\n"));
                 
