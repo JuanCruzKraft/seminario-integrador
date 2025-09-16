@@ -23,6 +23,9 @@ export default function MenuPage() {
   const [selectedCategorias, setSelectedCategorias] = useState<Set<number>>(new Set())
   const [loadingMenu, setLoadingMenu] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Estados para ordenamiento
+  const [sortBy, setSortBy] = useState<'nombre' | 'precio'>('nombre')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   // Estados por ítem individual
   const [selectedItems, setSelectedItems] = useState<Record<number, boolean>>({})
   const [qtyById, setQtyById] = useState<Record<number, number>>({})
@@ -91,12 +94,29 @@ export default function MenuPage() {
     }
   }, [vendedorId, router])
 
-  // Efecto para filtrar items cuando cambian las categorías seleccionadas
+  // Función para ordenar items
+  const sortItems = (items: ItemMenuDTO[], sortBy: 'nombre' | 'precio', sortOrder: 'asc' | 'desc') => {
+    return [...items].sort((a, b) => {
+      let comparison = 0
+      
+      if (sortBy === 'nombre') {
+        comparison = a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+      } else if (sortBy === 'precio') {
+        comparison = a.precio - b.precio
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+  }
+
+  // Efecto para filtrar y ordenar items cuando cambian las categorías seleccionadas o criterios de ordenamiento
   useEffect(() => {
+    let filtered: ItemMenuDTO[] = []
+    
     if (selectedCategorias.size === 0) {
-      setFilteredItemMenus(itemMenus)
+      filtered = itemMenus
     } else {
-      const filtered = itemMenus.filter(item => {
+      filtered = itemMenus.filter(item => {
         if (!item.categorias || item.categorias.length === 0) {
           return false
         }
@@ -104,9 +124,12 @@ export default function MenuPage() {
           selectedCategorias.has(categoria.id)
         )
       })
-      setFilteredItemMenus(filtered)
     }
-  }, [selectedCategorias, itemMenus])
+    
+    // Aplicar ordenamiento
+    const sortedItems = sortItems(filtered, sortBy, sortOrder)
+    setFilteredItemMenus(sortedItems)
+  }, [selectedCategorias, itemMenus, sortBy, sortOrder])
 
   const handleCategoriaToggle = (categoriaId: number) => {
     setSelectedCategorias(prev => {
@@ -298,45 +321,91 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Panel de Filtros por Categorías */}
-        {categorias.length > 0 && (
-          <div className="mb-6 bg-white shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Filtrar por Categorías</h3>
-              {selectedCategorias.size > 0 && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
-                >
-                  Limpiar filtros ({selectedCategorias.size})
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {categorias.map(categoria => (
-                <label
-                  key={categoria.id}
-                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCategorias.has(categoria.id)}
-                    onChange={() => handleCategoriaToggle(categoria.id)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    {categoria.nombre}
-                  </span>
+        {/* Panel de Filtros por Categorías y Ordenamiento */}
+        <div className="mb-6 bg-white shadow rounded-lg p-6">
+          {/* Sección de Ordenamiento */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Ordenar productos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Selector de criterio de ordenamiento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ordenar por:
                 </label>
-              ))}
-            </div>
-            {selectedCategorias.size > 0 && (
-              <div className="mt-4 text-sm text-gray-600">
-                Mostrando {filteredItemMenus.length} de {itemMenus.length} platos
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'nombre' | 'precio')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="nombre">Nombre</option>
+                  <option value="precio">Precio</option>
+                </select>
               </div>
-            )}
+              
+              {/* Selector de dirección de ordenamiento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Orden:
+                </label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="asc">
+                    {sortBy === 'nombre' ? 'A → Z' : 'Menor → Mayor'}
+                  </option>
+                  <option value="desc">
+                    {sortBy === 'nombre' ? 'Z → A' : 'Mayor → Menor'}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Sección de Filtros por Categorías */}
+          {categorias.length > 0 && (
+            <>
+              <hr className="my-6 border-gray-200" />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Filtrar por Categorías</h3>
+                  {selectedCategorias.size > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                    >
+                      Limpiar filtros ({selectedCategorias.size})
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {categorias.map(categoria => (
+                    <label
+                      key={categoria.id}
+                      className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategorias.has(categoria.id)}
+                        onChange={() => handleCategoriaToggle(categoria.id)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {categoria.nombre}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {selectedCategorias.size > 0 && (
+                  <div className="mt-4 text-sm text-gray-600">
+                    Mostrando {filteredItemMenus.length} de {itemMenus.length} platos
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Error Message */}
         {error && (
@@ -576,12 +645,19 @@ export default function MenuPage() {
                   : `${itemMenus.length} platos disponibles`
                 }
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-2">
                 {selectedCategorias.size > 0 
                   ? 'Filtros aplicados - Explora todo el menú o ajusta los filtros'
                   : 'Explora todo el menú y encuentra tu plato favorito'
                 }
               </p>
+              <div className="text-sm text-gray-400">
+                Ordenado por {sortBy === 'nombre' ? 'nombre' : 'precio'} • 
+                {sortBy === 'nombre' 
+                  ? (sortOrder === 'asc' ? ' A → Z' : ' Z → A')
+                  : (sortOrder === 'asc' ? ' Menor → Mayor' : ' Mayor → Menor')
+                }
+              </div>
             </div>
           </div>
         )}
