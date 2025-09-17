@@ -11,6 +11,7 @@ public class PedidoDTO {
     public Double precio;
     public Object costoEnvio;
     public Double subtotalItems;
+    public Boolean calificado;
 
     public PedidoDTO() {
         items = new java.util.ArrayList<>();

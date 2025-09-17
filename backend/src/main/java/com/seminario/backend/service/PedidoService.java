@@ -242,6 +242,7 @@ public class PedidoService {
         pedidoDTO.precio = p.getPrecio();
         pedidoDTO.costoEnvio = p.getCostoEnvio();
         pedidoDTO.subtotalItems = p.getSubTotal_Total();
+        pedidoDTO.calificado = p.getCalificado();
         Set<ItemPedido> items = itemPedidoRepository.findByPedido(p);
         for(ItemPedido item: items){
             ItemPedidoDTO itemDTO = new ItemPedidoDTO();
