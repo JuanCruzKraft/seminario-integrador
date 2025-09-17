@@ -4,7 +4,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.seminario.backend.dto.request.BuscarVendedorPorNombreRequestDTO;
+import com.seminario.backend.dto.request.VisualizarCalificacionVendedorRequestDTO;
 import com.seminario.backend.dto.request.VisualizarVendedorQueVendeDTORequest;
+import com.seminario.backend.dto.response.VisualizarCalificacionVendedorResponseDTO;
 import com.seminario.backend.dto.response.VisualizarVendedoresResponseDTO;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.service.VendedorService;
@@ -43,8 +45,10 @@ public class VendedorController {
         return vendedorService.buscarVendedoresPorNombre(request.nombreVendedor);
     }
 
-    // estas funciones no son parte del sistema. es para el desarrollo nomas
-    //hay q borrarlas antes de la presentacion
+    @PostMapping("/calificaciones")
+    public VisualizarCalificacionVendedorResponseDTO visualizarCalificaciones(@RequestBody VisualizarCalificacionVendedorRequestDTO request){
+        return vendedorService.visualizarCalificaciones(request);
+    }
     
     
 }

@@ -7,9 +7,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.seminario.backend.dto.request.CalificarPedidoRequestDTO;
 import com.seminario.backend.dto.request.pedido.VerPedidosResponseDTO;
+import com.seminario.backend.dto.response.CalificarPedidoResponseDTO;
 import com.seminario.backend.dto.response.EstadoPedidoResponseDTO;
 import com.seminario.backend.service.PedidoService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 //@Controller
@@ -42,4 +47,10 @@ public class PedidoController {
     public VerPedidosResponseDTO verHistorialPedidos() {
         return pedidoService.verHistorialPedidos();
     }
+
+    @PostMapping("/calificar")
+    public CalificarPedidoResponseDTO calificar(@RequestBody CalificarPedidoRequestDTO request) {
+        return pedidoService.calificar(request);
+    }
+    
 }

@@ -45,6 +45,9 @@ public class Vendedor{
     private Double calificacionPromedio;
 
     @Column
+    private Integer cantidadCalificaciones;
+
+    @Column
     @Embedded
     private Coordenada coordenadas;
 

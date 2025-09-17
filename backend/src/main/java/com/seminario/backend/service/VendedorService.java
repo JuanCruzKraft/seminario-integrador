@@ -7,11 +7,16 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.CalcularDatosLogisticosResponse;
+import com.seminario.backend.dto.CalificacionDTO;
 import com.seminario.backend.dto.VendedorDTO;
+import com.seminario.backend.dto.request.VisualizarCalificacionVendedorRequestDTO;
+import com.seminario.backend.dto.response.VisualizarCalificacionVendedorResponseDTO;
 import com.seminario.backend.dto.response.VisualizarItemMenuResponseDTO;
 import com.seminario.backend.dto.response.VisualizarVendedoresResponseDTO;
+import com.seminario.backend.model.Calificacion;
 import com.seminario.backend.model.Coordenada;
 import com.seminario.backend.model.Vendedor;
+import com.seminario.backend.repository.CalificacionRepository;
 import com.seminario.backend.repository.ClienteRepository;
 import com.seminario.backend.repository.VendedorRepository;
 import com.seminario.backend.sesion.SesionMockeada;
@@ -23,12 +28,14 @@ public class VendedorService {
     private final EnvioService envioService;
     private final SesionMockeada sesion;
     private final ClienteRepository clienteRepository;
+    private final CalificacionRepository calificacionRepository;
 
-    public VendedorService(VendedorRepository vendedorRepository, EnvioService envioService, SesionMockeada sesion, ClienteRepository clienteRepository) {
+    public VendedorService(VendedorRepository vendedorRepository, EnvioService envioService, SesionMockeada sesion, ClienteRepository clienteRepository, CalificacionRepository calificacionRepository) {
         this.vendedorRepository = vendedorRepository;
         this.envioService = envioService;
         this.sesion = sesion;
         this.clienteRepository = clienteRepository;
+        this.calificacionRepository = calificacionRepository;
     }
 
     public VisualizarVendedoresResponseDTO visualizarVendedores() {
@@ -230,6 +237,38 @@ public class VendedorService {
             response.resultado.mensaje = "Error al obtener los vendedores: " + e.getMessage();
         }
 
+        return response;
+    }
+
+    public VisualizarCalificacionVendedorResponseDTO visualizarCalificaciones (VisualizarCalificacionVendedorRequestDTO request){
+        VisualizarCalificacionVendedorResponseDTO response = new VisualizarCalificacionVendedorResponseDTO();
+        Vendedor vendedor = vendedorRepository.findById(request.vendedorId).orElse(null);
+        if(vendedor == null){
+            response.resultado.status = 1;
+            response.resultado.mensaje = "No se encontró el vendedor.";
+            return response;
+        }
+        
+        List<Calificacion> calificaciones = calificacionRepository.findByPedido_vendedor_vendedorid(request.vendedorId);
+        for(Calificacion calificacion : calificaciones){
+            CalificacionDTO calificacionDTO = new CalificacionDTO();
+            calificacionDTO.id = calificacion.getCalificacionid();
+            calificacionDTO.puntaje = calificacion.getPuntaje();
+            if(calificacion.getComentario() == null){
+                calificacionDTO.comentario = "El cliente no incluyó un comentario.";
+            } else {
+                calificacionDTO.comentario = calificacion.getComentario();
+            }
+            
+            calificacionDTO.nombreCliente = calificacion.getPedido().getCliente().getNombre();
+            response.calificaciones.add(calificacionDTO);
+        }
+        response.nombreVendedor = vendedor.getNombre();
+        response.cantidadCalificaciones = calificaciones.size();
+        response.calificacionPromedio = vendedor.getCalificacionPromedio();
+        response.cantidadCalificaciones = vendedor.getCantidadCalificaciones();
+        response.resultado.status = 0;
+        response.resultado.mensaje = "Calificaciones obtenidas exitosamente.";
         return response;
     }
     }

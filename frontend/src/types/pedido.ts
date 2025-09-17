@@ -1,4 +1,5 @@
 import { ItemPedidoDTO } from './carrito'
+import type { BaseResponse } from './common'
 
 export interface PedidoDTO {
   pedidoID: number
@@ -9,6 +10,7 @@ export interface PedidoDTO {
   precio: number
   costoEnvio: number
   subtotalItems: number
+  calificado?: boolean
 }
 
 export interface VerPedidosResponseDTO {
@@ -31,4 +33,15 @@ export interface EstadoPedidoResponse {
     status: number
     mensaje: string
   }
+}
+
+// Tipos para calificación
+export interface CalificarPedidoRequest {
+  pedidoId: number
+  calificacion: number // De 1 a 5
+  comentario: string
+}
+
+export interface CalificarPedidoResponse extends BaseResponse {
+  // No hay campos adicionales específicos según el DTO del backend
 }

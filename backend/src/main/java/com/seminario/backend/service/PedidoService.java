@@ -11,13 +11,19 @@ import org.springframework.stereotype.Service;
 
 import com.seminario.backend.dto.ItemPedidoDTO;
 import com.seminario.backend.dto.PedidoDTO;
+import com.seminario.backend.dto.request.CalificarPedidoRequestDTO;
 import com.seminario.backend.dto.request.pedido.VerPedidosResponseDTO;
+import com.seminario.backend.dto.response.CalificarPedidoResponseDTO;
 import com.seminario.backend.dto.response.EstadoPedidoResponseDTO;
 import com.seminario.backend.enums.EstadoPedido;
+import com.seminario.backend.model.Calificacion;
 import com.seminario.backend.model.ItemPedido;
 import com.seminario.backend.model.Pedido;
+import com.seminario.backend.model.Vendedor;
+import com.seminario.backend.repository.CalificacionRepository;
 import com.seminario.backend.repository.ItemPedidoRepository;
 import com.seminario.backend.repository.PedidoRepository;
+import com.seminario.backend.repository.VendedorRepository;
 import com.seminario.backend.sesion.SesionMockeada;
 
 @Service
@@ -26,12 +32,16 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ItemPedidoRepository itemPedidoRepository;
     private final SesionMockeada sesion;
+    private final VendedorRepository vendedorRepository;   
+    private final CalificacionRepository calificacionRepository; 
     private final Random random = new Random();
     
-    public PedidoService(PedidoRepository pedidoRepository, SesionMockeada sesion, ItemPedidoRepository itemPedidoRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, SesionMockeada sesion, ItemPedidoRepository itemPedidoRepository, VendedorRepository vendedorRepository, CalificacionRepository calificacionRepository) {
         this.pedidoRepository = pedidoRepository;
         this.sesion = sesion;
         this.itemPedidoRepository = itemPedidoRepository;
+        this.vendedorRepository = vendedorRepository;
+        this.calificacionRepository = calificacionRepository;
     }
     
     @Async
@@ -232,6 +242,7 @@ public class PedidoService {
         pedidoDTO.precio = p.getPrecio();
         pedidoDTO.costoEnvio = p.getCostoEnvio();
         pedidoDTO.subtotalItems = p.getSubTotal_Total();
+        pedidoDTO.calificado = p.getCalificado();
         Set<ItemPedido> items = itemPedidoRepository.findByPedido(p);
         for(ItemPedido item: items){
             ItemPedidoDTO itemDTO = new ItemPedidoDTO();
@@ -251,5 +262,43 @@ public class PedidoService {
            response.resultado.mensaje = "No se encontraron pedidos en el historial";
        }
        return response;
+    }
+
+    public CalificarPedidoResponseDTO calificar(CalificarPedidoRequestDTO request){
+        CalificarPedidoResponseDTO response = new CalificarPedidoResponseDTO();
+        Pedido pedido = pedidoRepository.findById(request.pedidoId).orElse(null);
+        if(pedido == null || pedido.getEstado() != EstadoPedido.ENTREGADO){
+            response.resultado.status = 1;
+            response.resultado.mensaje = "Pedido no encontrado o no entregado";
+            return response;
+        }
+        if(pedido.getCalificado() != null && pedido.getCalificado()){
+            response.resultado.status = 1;
+            response.resultado.mensaje = "Pedido ya ha sido calificado";
+            return response;
+        } 
+        Calificacion calificacion = new Calificacion();
+        calificacion.setPedido(pedido);
+        calificacion.setPuntaje(request.calificacion);
+        calificacion.setComentario(request.comentario);
+        calificacion.setFechaCalificacion(LocalDateTime.now());
+
+        Vendedor vendedor = vendedorRepository.findById(pedido.getVendedor().getVendedorid()).orElse(null);
+        if (vendedor != null) {
+            int nuevaCantidad = (vendedor.getCantidadCalificaciones() != null ? vendedor.getCantidadCalificaciones() : 0) + 1;
+            double calificacionActual = vendedor.getCalificacionPromedio() != null ? vendedor.getCalificacionPromedio() : 0.0;
+            double nuevaCalificacionPromedio = ((calificacionActual * (nuevaCantidad - 1)) + request.calificacion) / nuevaCantidad;
+            vendedor.setCalificacionPromedio(nuevaCalificacionPromedio);
+            vendedor.setCantidadCalificaciones(nuevaCantidad);
+            vendedorRepository.save(vendedor);
+        }
+        pedido.setCalificado(true);
+        pedidoRepository.save(pedido);
+        calificacionRepository.save(calificacion);
+        response.resultado.status = 0;
+        response.resultado.mensaje = "Calificación registrada con éxito";
+
+
+        return response;
     }
 }

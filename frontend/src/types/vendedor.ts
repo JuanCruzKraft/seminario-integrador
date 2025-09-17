@@ -17,8 +17,29 @@ export interface VendedorDTO {
   direccion?: string;
   activo?: boolean;
   datosLogisticos?: DatosLogisticos;
+  calificacionPromedio?: number;
+  cantidadCalificaciones?: number;
 }
 
 export interface VisualizarVendedoresResponse extends BaseResponse {
   vendedores: VendedorDTO[];
+}
+
+// Tipos para calificaciones
+export interface CalificacionDTO {
+  id: number;
+  puntaje: number;
+  comentario: string;
+  nombreCliente: string;
+}
+
+export interface VisualizarCalificacionVendedorRequest {
+  vendedorId: number;
+}
+
+export interface VisualizarCalificacionVendedorResponse extends BaseResponse {
+  nombreVendedor: string;
+  calificacionPromedio: number;
+  cantidadCalificaciones: number;
+  calificaciones: CalificacionDTO[];
 }
