@@ -8,8 +8,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCarrito } from '@/contexts/CarritoContext'
 import { getItemMenusByVendedor } from '@/services/itemMenuService'
 import { addItemToCarrito } from '@/services/carritoService'
+import { VendedorService } from '@/services/vendedorService'
 import CarritoDropdown from '@/components/CarritoDropdown'
 import type { ItemMenuDTO, CategoriaDTO } from '@/types/itemMenu'
+import type { VisualizarCalificacionVendedorResponse } from '@/types/vendedor'
 import axios from 'axios'
 
 export default function MenuPage() {
@@ -26,6 +28,9 @@ export default function MenuPage() {
   // Estados para ordenamiento
   const [sortBy, setSortBy] = useState<'nombre' | 'precio'>('nombre')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  // Estados para calificaciones del vendedor
+  const [calificacionesData, setCalificacionesData] = useState<VisualizarCalificacionVendedorResponse | null>(null)
+  const [loadingCalificaciones, setLoadingCalificaciones] = useState(false)
   // Estados por ítem individual
   const [selectedItems, setSelectedItems] = useState<Record<number, boolean>>({})
   const [qtyById, setQtyById] = useState<Record<number, number>>({})
@@ -48,6 +53,7 @@ export default function MenuPage() {
       setError(null)
       setItemMenus([])
       
+      // Cargar menú del vendedor
       getItemMenusByVendedor(parseInt(vendedorId))
         .then(data => {
           console.log('Items recibidos del backend:', data)
@@ -77,6 +83,20 @@ export default function MenuPage() {
           }
         })
         .finally(() => setLoadingMenu(false))
+
+      // Cargar calificaciones del vendedor
+      setLoadingCalificaciones(true)
+      VendedorService.obtenerCalificaciones(parseInt(vendedorId))
+        .then(data => {
+          if (data.resultado.status === 0) {
+            setCalificacionesData(data)
+          }
+        })
+        .catch((err) => {
+          console.error('Error al cargar calificaciones:', err)
+          // No mostramos error porque las calificaciones son opcionales
+        })
+        .finally(() => setLoadingCalificaciones(false))
     }
   }, [isAuthenticated, vendedorId])
 
@@ -311,13 +331,58 @@ export default function MenuPage() {
               <div className="h-12 w-12 bg-green-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-xl">🍽️</span>
               </div>
-              <div className="ml-4">
+              <div className="ml-4 flex-1">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {vendedorNombre || 'Menú del Vendedor'}
                 </h2>
                 <p className="text-gray-600">Descubre los deliciosos platos disponibles</p>
               </div>
             </div>
+            
+            {/* Sección de Calificaciones */}
+            {calificacionesData && calificacionesData.cantidadCalificaciones > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <div className="flex items-center text-yellow-400 mr-2">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-5 h-5 ${
+                              i < Math.round(calificacionesData.calificacionPromedio) 
+                                ? 'text-yellow-400' 
+                                : 'text-gray-300'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.518 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-lg font-semibold text-gray-900">
+                        {calificacionesData.calificacionPromedio.toFixed(1)}
+                      </span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        ({calificacionesData.cantidadCalificaciones} reseña{calificacionesData.cantidadCalificaciones !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => router.push(`/vendedores/${vendedorId}/calificaciones`)}
+                    className="flex items-center px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Ver todas las reseñas
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

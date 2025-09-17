@@ -26,10 +26,15 @@ export const buscarVendedoresPorNombre = async (nombreVendedor: string): Promise
 
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '@/constants/api';
-import type { VisualizarVendedoresResponse } from '@/types/vendedor';
+import type { VisualizarVendedoresResponse, VisualizarCalificacionVendedorRequest, VisualizarCalificacionVendedorResponse } from '@/types/vendedor';
 
 export class VendedorService {
   static async listarVendedores(): Promise<VisualizarVendedoresResponse> {
     return ApiService.get<VisualizarVendedoresResponse>(API_ENDPOINTS.VENDEDORES_LISTAR);
+  }
+
+  static async obtenerCalificaciones(vendedorId: number): Promise<VisualizarCalificacionVendedorResponse> {
+    const request: VisualizarCalificacionVendedorRequest = { vendedorId };
+    return ApiService.post<VisualizarCalificacionVendedorResponse>('/vendedores/calificaciones', request);
   }
 }
