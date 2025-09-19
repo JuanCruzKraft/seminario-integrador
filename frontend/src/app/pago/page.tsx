@@ -254,12 +254,12 @@ export default function PagoPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       {/* Logo en esquina superior izquierda */}
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-3 left-3 z-50">
         <Image
-          src="/Logo.png"
+          src="/logo_fixed.png"
           alt="Logo"
-          width={50}
-          height={50}
+          width={80}
+          height={22}
           className="object-contain opacity-80 hover:opacity-100 transition-opacity"
         />
       </div>

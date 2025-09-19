@@ -54,14 +54,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      {/* Login Form */}
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
         {/* Logo centrado en login */}
         <div className="flex justify-center mb-6">
           <Image
-            src="/Logo.png"
+            src="/logo_fixed.png"
             alt="Logo"
-            width={80}
-            height={80}
+            width={200}
+            height={60}
             className="object-contain"
           />
         </div>

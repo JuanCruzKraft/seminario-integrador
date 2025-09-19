@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { useCarrito } from '@/contexts/CarritoContext'
 import { getVendedores } from '@/services/vendedorService'
@@ -195,8 +196,15 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Sistema de Pedidos
+              <Image
+                src="/logo_fixed.png"
+                alt="SantaFOOD"
+                width={100}
+                height={28}
+                className="object-contain mr-3"
+              />
+              <h1 className="text-xl font-bold text-gray-900">
+                SantaFood
               </h1>
             </div>
             <div className="flex items-center space-x-4">

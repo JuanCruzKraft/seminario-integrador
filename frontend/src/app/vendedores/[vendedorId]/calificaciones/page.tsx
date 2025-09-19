@@ -100,12 +100,12 @@ export default function CalificacionesVendedorPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Logo en esquina superior izquierda */}
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-3 left-3 z-50">
         <Image
-          src="/Logo.png"
+          src="/logo_fixed.png"
           alt="Logo"
-          width={50}
-          height={50}
+          width={80}
+          height={22}
           className="object-contain opacity-80 hover:opacity-100 transition-opacity"
         />
       </div>
@@ -166,7 +166,7 @@ export default function CalificacionesVendedorPage() {
                     <span className="text-3xl font-bold text-gray-900 mr-2">
                       {calificacionesData.calificacionPromedio.toFixed(1)}
                     </span>
-                    <span className="text-gray-600">
+                    <span className="text-black">
                       ({calificacionesData.cantidadCalificaciones} reseña{calificacionesData.cantidadCalificaciones !== 1 ? 's' : ''})
                     </span>
                   </div>
