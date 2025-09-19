@@ -257,7 +257,7 @@ export default function CarritoPage() {
                           <label className="text-sm font-medium text-gray-700 mr-4">
                             Cantidad:
                           </label>
-                          <div className="flex items-center border rounded-md">
+                          <div className="flex items-center border rounded-md text-gray-900">
                             <button
                               className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-l-md"
                               onClick={() => handleModificarCantidad(item, item.cantidad - 1)}
@@ -265,7 +265,7 @@ export default function CarritoPage() {
                             >
                               -
                             </button>
-                            <span className="px-4 py-1 bg-white border-l border-r">
+                            <span className="px-4 py-1 bg-white border-l border-r text-gray-900">
                               {item.cantidad}
                             </span>
                             <button
