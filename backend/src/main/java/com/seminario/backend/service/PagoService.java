@@ -496,9 +496,9 @@ public class PagoService {
             try {
                 // Intentar múltiples rutas posibles para el logo
                 String[] logoPaths = {
-                    "src/main/resources/static/Logo.png",
-                    "backend/src/main/resources/static/Logo.png",
-                    "classpath:static/Logo.png"
+                    "src/main/resources/static/logo_fixed.png",
+                    "backend/src/main/resources/static/logo_fixed.png",
+                    "classpath:static/logo_fixed.png"
                 };
                 
                 com.itextpdf.layout.element.Image logo = null;
@@ -508,7 +508,7 @@ public class PagoService {
                     try {
                         if (path.startsWith("classpath:")) {
                             // Intentar cargar desde classpath
-                            java.io.InputStream logoStream = getClass().getClassLoader().getResourceAsStream("static/Logo.png");
+                            java.io.InputStream logoStream = getClass().getClassLoader().getResourceAsStream("static/logo_fixed.png");
                             if (logoStream != null) {
                                 byte[] logoBytes = logoStream.readAllBytes();
                                 com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(logoBytes);

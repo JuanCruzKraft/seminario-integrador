@@ -283,22 +283,21 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Logo en esquina superior izquierda */}
-      <div className="fixed top-4 left-4 z-50">
-        <Image
-          src="/Logo.png"
-          alt="Logo"
-          width={50}
-          height={50}
-          className="object-contain opacity-80 hover:opacity-100 transition-opacity"
-        />
-      </div>
-
       {/* Header/Navbar */}
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
+              {/* Logo en esquina izquierda de la barra */}
+              <div className="mr-6">
+                <Image
+                  src="/logo_fixed.png"
+                  alt="Logo"
+                  width={90}
+                  height={25}
+                  className="object-contain"
+                />
+              </div>
               <button
                 onClick={() => router.push('/vendedores')}
                 className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mr-4"
