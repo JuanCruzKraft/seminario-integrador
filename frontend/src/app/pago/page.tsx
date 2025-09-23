@@ -545,18 +545,18 @@ export default function PagoPage() {
                     {/* Datos del Vendedor para Transferencia */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <h4 className="font-medium text-blue-800 mb-3">Datos para Transferencia Bancaria</h4>
-                      <div className="space-y-2 text-sm">
+                      <div className="space-y-2 text-sm text-blue-800">
                         <div>
                           <span className="font-medium text-gray-700">Titular:</span> 
                           <span className="ml-2">{paymentInfo.vendedorNombre}</span>
                         </div>
                         <div>
                           <span className="font-medium text-gray-700">CUIT:</span> 
-                          <span className="ml-2 font-mono">{paymentInfo.vendedorCuit}</span>
+                          <span className="ml-2 font-mono text-gray-900">{paymentInfo.vendedorCuit}</span>
                         </div>
                         <div>
                           <span className="font-medium text-gray-700">CBU:</span> 
-                          <span className="ml-2 font-mono">{paymentInfo.vendedorCbu}</span>
+                          <span className="ml-2 font-mono text-gray-900">{paymentInfo.vendedorCbu}</span>
                         </div>
                         <div>
                           <span className="font-medium text-gray-700">Monto a transferir:</span> 
